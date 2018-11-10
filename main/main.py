@@ -4,6 +4,8 @@ import sys
 import json
 import networkx as nx
 
+from screeninfo import get_monitors
+
 from PyQt5.QtWidgets import qApp, QMainWindow, QAction, QFileDialog, QSizePolicy, QApplication, QVBoxLayout
 from PyQt5.QtGui import QIcon
 
@@ -11,37 +13,65 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
 
-class Application(QMainWindow):
+DEFAULT_DPI = 100
+MENU_SHIFT  = 20
 
-	def __init__(self):
+class Application(QApplication):
+
+	def __init__(self, args):
+		QApplication.__init__(self, args)
+
+
+	def mouseMoveEvent(self, event):
+		print('FUCK YEAH')
+		QApplication.mouseMoveEvent(self, event)
+
+	def mousePressEvent(self, event):
+		print('FUCK YEAH')
+		QApplication.mousePressEvent(self, event)
+
+class MainWindow(QMainWindow):
+
+	def __init__(self, width, height):
 		QMainWindow.__init__(self)
-		self.initUI()
+		self.initUI(width, height )
 
-	def initUI(self):
-		# Settings
-		self.setFixedSize(640, 500)
-		# Settings
+	#UI
+	def initUI(self, width, height):
+		self.initMainWindow(width, height)
+
+		self.initCanvas(width, height)
+		
+		self.initMenu()
+
+
+	def initMainWindow(self, width, height):
+		self.setFixedSize(width * DEFAULT_DPI, height * DEFAULT_DPI + MENU_SHIFT)
 		self.setWindowTitle('WG Forge')
-		self.setWindowIcon(QIcon('logo.png'))
-		# Widgets
-		self.canvas = CustomCanvas(self)
-		self.canvas.move(0, 20) # Canvas заезжает под Menu, поэтому мы её опустим на 20 пикселей
-		# Open
+		self.setWindowIcon(QIcon('logo.png')) 
+
+	def initCanvas(self, width, height):
+		self.canvas = CustomCanvas(self, width, height)
+		self.canvas.move(0, MENU_SHIFT)
+
+	def initMenu(self):
 		open_action = QAction('Open', self)
 		open_action.triggered.connect(self.open)
-		# Save
+
 		save_action = QAction('Save', self)
 		save_action.triggered.connect(self.save)
-		# Exit
+
 		exit_action = QAction(QIcon('exit.png'), 'Exit', self)
 		exit_action.triggered.connect(qApp.quit)
-		# Menu
+
 		self.menu_bar = self.menuBar()
 		self.file_menu = self.menu_bar.addMenu('File')
 		self.file_menu.addAction(open_action)
 		self.file_menu.addAction(save_action)
 		self.file_menu.addAction(exit_action)
 
+
+	#actions
 	def open(self):
 		filename = QFileDialog.getOpenFileName(self, 'Select file', '', 'Json (*.json)')
 		if filename[0]:
@@ -54,22 +84,19 @@ class Application(QMainWindow):
 		if filename[0]:
 			self.canvas.figure.savefig(filename[0])
 
-	def resized(self):
-		pass
-
-
 
 #matplotlib canvas
 class CustomCanvas(FigureCanvas):
 
-	def __init__(self, parent):
-		figure = Figure()
+	def __init__(self, parent, width, height):
+		figure = Figure(figsize=(width, height), dpi=DEFAULT_DPI)
 		FigureCanvas.__init__(self, figure)
+
 		self.setParent(parent)
-		FigureCanvas.setSizePolicy(self,
-			QSizePolicy.Expanding,
-			QSizePolicy.Expanding
-		)
+		#FigureCanvas.setSizePolicy(self,
+		#	QSizePolicy.Expanding,
+		#	QSizePolicy.Expanding
+		#)
 		FigureCanvas.updateGeometry(self)
 
 
@@ -103,7 +130,16 @@ class CustomCanvas(FigureCanvas):
 		
 
 if __name__ == '__main__':
-	app = QApplication(sys.argv)
-	main_window = Application()
+	monitors = get_monitors()
+	width  = min(monitors, key = lambda x: x.width).width
+	height = min(monitors, key = lambda x: x.height).height
+	width  //= 2
+	width  //= DEFAULT_DPI
+	height //= 2
+	height //= DEFAULT_DPI
+
+	#app = QApplication(sys.argv)
+	app = Application(sys.argv)
+	main_window = MainWindow(width, height)
 	main_window.show()
 	sys.exit(app.exec_())
