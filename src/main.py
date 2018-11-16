@@ -21,7 +21,7 @@ class Application(QMainWindow):
         self.setFixedSize(640, 500)
         # Settings
         self.setWindowTitle('WG Forge')
-        self.setWindowIcon(QIcon('logo.png'))
+        self.setWindowIcon(QIcon('src/logo.png'))
         # Widgets
         self.canvas = CustomCanvas(self)
         self.canvas.move(0, 20) # Canvas заезжает под Menu, поэтому мы её опустим на 20 пикселей
