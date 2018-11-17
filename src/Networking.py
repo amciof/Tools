@@ -78,6 +78,7 @@ class Network:
 		return self.getResponse()
 
 	def requestUpgrade(self):
+
 		pass
 
 	def requestTurn(self):
@@ -157,9 +158,16 @@ class Network:
 
 		return msg
 
-net = Network('wgforge-srv.wargaming.net', 443)
-login = net.requestLogin('Pingas')
-map   = net.requestMap(0)
-map   = net.requestMap(1)
-print(login)
-print(map)
+
+if __name__ == '__main__':
+	net = Network('wgforge-srv.wargaming.net', 443)
+	login = net.requestLogin('Pingas')
+	map0   = net.requestMap(0)
+	map1   = net.requestMap(1)
+
+	print(login)
+	print()
+	print(map0)
+	print()
+	print(map1)
+	print()
