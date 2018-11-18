@@ -1,0 +1,152 @@
+{
+    "idx": 1,
+    "lines": [
+        {
+            "idx": 1,
+            "length": 10,
+            "points": [
+                1,
+                7
+            ]
+        },
+        {
+            "idx": 2,
+            "length": 10,
+            "points": [
+                8,
+                2
+            ]
+        },
+        {
+            "idx": 3,
+            "length": 10,
+            "points": [
+                9,
+                3
+            ]
+        },
+        {
+            "idx": 4,
+            "length": 10,
+            "points": [
+                10,
+                4
+            ]
+        },
+        {
+            "idx": 5,
+            "length": 10,
+            "points": [
+                11,
+                5
+            ]
+        },
+        {
+            "idx": 6,
+            "length": 10,
+            "points": [
+                12,
+                6
+            ]
+        },
+        {
+            "idx": 7,
+            "length": 10,
+            "points": [
+                7,
+                8
+            ]
+        },
+        {
+            "idx": 8,
+            "length": 10,
+            "points": [
+                8,
+                9
+            ]
+        },
+        {
+            "idx": 9,
+            "length": 10,
+            "points": [
+                9,
+                10
+            ]
+        },
+        {
+            "idx": 10,
+            "length": 10,
+            "points": [
+                10,
+                11
+            ]
+        },
+        {
+            "idx": 11,
+            "length": 10,
+            "points": [
+                11,
+                12
+            ]
+        },
+        {
+            "idx": 12,
+            "length": 10,
+            "points": [
+                12,
+                7
+            ]
+        }
+    ],
+    "name": "map01",
+    "points": [
+        {
+            "idx": 1,
+            "post_idx": 1
+        },
+        {
+            "idx": 2,
+            "post_idx": null
+        },
+        {
+            "idx": 3,
+            "post_idx": null
+        },
+        {
+            "idx": 4,
+            "post_idx": null
+        },
+        {
+            "idx": 5,
+            "post_idx": null
+        },
+        {
+            "idx": 6,
+            "post_idx": null
+        },
+        {
+            "idx": 7,
+            "post_idx": 2
+        },
+        {
+            "idx": 8,
+            "post_idx": null
+        },
+        {
+            "idx": 9,
+            "post_idx": null
+        },
+        {
+            "idx": 10,
+            "post_idx": null
+        },
+        {
+            "idx": 11,
+            "post_idx": null
+        },
+        {
+            "idx": 12,
+            "post_idx": null
+        }
+    ]
+}

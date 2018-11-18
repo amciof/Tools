@@ -1,0 +1,46 @@
+{
+    "idx": 1,
+    "posts": [
+        {
+            "armor": 0,
+            "armor_capacity": 200,
+            "idx": 1,
+            "name": "town-one",
+            "player_idx": "7768971a-3452-4461-8fb7-7a7ce6af5b04",
+            "point_idx": 1,
+            "population": 1,
+            "population_capacity": 10,
+            "product": 100,
+            "product_capacity": 200,
+            "type": 1
+        },
+        {
+            "idx": 2,
+            "name": "market-one",
+            "point_idx": 7,
+            "product": 20,
+            "product_capacity": 20,
+            "replenishment": 1,
+            "type": 2
+        }
+    ],
+    "ratings": {
+        "7768971a-3452-4461-8fb7-7a7ce6af5b04": {
+            "idx": "7768971a-3452-4461-8fb7-7a7ce6af5b04",
+            "name": "Pingas",
+            "rating": 0
+        }
+    },
+    "trains": [
+        {
+            "goods": 0,
+            "goods_capacity": 40,
+            "goods_type": null,
+            "idx": 1,
+            "line_idx": 1,
+            "player_idx": "7768971a-3452-4461-8fb7-7a7ce6af5b04",
+            "position": 0,
+            "speed": 0
+        }
+    ]
+}
