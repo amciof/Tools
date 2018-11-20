@@ -3,6 +3,7 @@
 
 import sys
 import json
+
 import networkx as nx
 from PyQt5.QtWidgets import qApp, QMainWindow, QAction, QFileDialog, QSizePolicy, QApplication, QVBoxLayout
 from PyQt5.QtGui import QIcon
