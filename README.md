@@ -1,5 +1,11 @@
 # Tools
 
+## Команда
+
+- [amciof](https://github.com/amciof) - Махарёнок Вячеслав
+- [DmitryKobzev](https://github.com/DmitryKobzev) - Кобзев Дмитрий
+- [BossOfTheGym](https://github.com/BossOfTheGym) - Дейкун Владимир
+
 ## Задания
 
 ### Граф визуальный прекрасный I
