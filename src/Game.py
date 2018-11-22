@@ -42,6 +42,7 @@ class Game:
 
 	#render
 	def render(self):
+
 		self.scene.renderScene()
 
 
