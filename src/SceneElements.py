@@ -19,7 +19,6 @@ class Base:
 
 		self.baseType = baseType
 
-
 class Town(Base):
 
 	def __init__(self, jsonTown, jsonPoint):
@@ -36,8 +35,6 @@ class Town(Base):
 		#train_cooldown      ???
 
 		pass
-
-
 
 class Market(Base):
 
@@ -77,6 +74,13 @@ class Road:
 		return self.base1.idx, self.base2.idx
 
 
+#CJ JUST FOLLOW DAT DAMN TRAIN
+class Speed:
+
+	STOP     = 0
+	FORWARD  = +1
+	BACKWARD = -1
+
 class Train:
 	
 	SIZE = 20
@@ -91,3 +95,26 @@ class Train:
 		self.speed         = jsonTrain['speed']
 
 		self.road  = road
+
+	def move(self, speed):
+		#hmmm this looks sucpicious
+		length = self.road.length
+		pos    = self.position
+
+		self.position = max(min(pos + speed, length), 0)
+
+	def jumpToRoad(self, newRoad):
+		#hmmm this looks sucpicious
+		oldRoad = self.road
+		pos     = self.position
+		
+		base1, base2 = oldRoad.getAdjacent()
+
+		if pos == 0 or pos == oldRoad.length:
+			currBase = base1 if pos == 0 else base2
+
+			base1, base2 = newRoad.getAdjacent()
+
+			pos = 0 if currBase.idx == base1.idx else newRoad.length
+
+			self.road = newRoad

@@ -4,12 +4,6 @@ from PyQt5.QtGui import QPainter, QColor, QPen
 import numpy as np
 
 
-class Move:
-
-	STOP     = 0
-	FORWARD  = +1
-	BACKWARD = -1
-
 class Player:
 
 	##init

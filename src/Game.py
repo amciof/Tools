@@ -32,9 +32,10 @@ class Game:
 
 	##events
 	#update logic(main method)
-	def update(self, event, dt):
+	def update(self, event):
 		if event.type() == Game.EVENT_MOUSE_PRESS:
 			self.handleMousePress(event)
+
 		elif event.type() == Game.EVENT_PAINT:
 			self.render()
 
@@ -52,6 +53,7 @@ class Game:
 		pass
 
 	def handleMousePress(self, event):
+
 		pass
 
 	#key handlers

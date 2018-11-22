@@ -16,6 +16,7 @@ class App(QMainWindow):
 
 	def __init__(self):
 		super().__init__()
+
 		self.title = 'Anime kills'
 		self.left   = 100
 		self.top    = 100
@@ -33,7 +34,7 @@ class App(QMainWindow):
 		self.show()
 
 	def event(self, event):
-		self.game.update(event, 0)
+		self.game.update(event)
 		return QMainWindow.event(self, event)
 
 

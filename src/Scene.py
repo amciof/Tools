@@ -1,13 +1,14 @@
 
 from PyQt5.QtGui import QPainter, QColor, QPen, QBrush
 
-from SceneElements import Road, Train, Base, Town, Market, Storage
+from SceneElements import Base, Town, Market, Storage
+from SceneElements import Road, Speed, Train
 
 import networkx as nx
-import json
-import math
+import numpy    as np
 
-import numpy as np
+import math
+import json
 
 
 class RenderInfo:
@@ -16,7 +17,7 @@ class RenderInfo:
 		self.pos   = pos
 		self.color = color
 
-
+#OOOAH, IT'S SO FUCKING DEEP
 class Scene:
 
 	BASES_COLORS = {
@@ -182,7 +183,62 @@ class Scene:
 			self.trainsRenderBuffer[idx] = np.int32([0, 0])
 
 
-	##logic
+	##logic(fkng clicks)
+	def hitsAdjacent(self, idxBase, winCoords):
+		#can be O(log(V)), but no need: this will soon shrink))
+		for idx in self.adjacencyRel[idxBase]:
+			if self.hitsBase(idx, winCoords):
+				return idx
+
+	def hitsBase(self, idxBase, winCoords):
+		pos = self.basesWorldPos[idxBase]
+		
+		#adjustWinCoords() -> in future(maybe)
+		return abs(winCoords[0] - pos[0]) < Train.SIZE // 2 \
+			and abs(winCoords[1] - pos[1]) < Train.SIZE // 2
+
+	def hitsTrain(self, idxTrain, winCoords):
+		pos = self.trainsWorldPos[idxTrain]
+		
+		#adjustWinCoords() -> in future(maybe)
+		return abs(winCoords[0] - pos[0]) < Train.SIZE // 2 \
+			and abs(winCoords[1] - pos[1]) < Train.SIZE // 2
+
+
+	def moveTrain(self, idxTrain, speed):
+		train = self.trains[idxTrain]
+
+		train.move(speed)
+
+		#update train pos
+		road     = train.road
+		trainPos = train.position
+
+		base1, _  = self.roads.getAdjacentIdx()
+
+		roadVec = self.roadsVecs[road.idx]
+		basePos = self.basesInfo[base1].pos
+
+		trainInfo = self.trainsInfo[idxTrain]
+		trainInfo.pos[0] = basePos[0] + roadVec[0] * trainPos
+		trainInfo.pos[1] = basePos[1] + roadVec[1] * trainPos
+
+	
+	def getBase(self, idx):
+		
+		return self.bases[idx]
+
+	def getRoad(self, idx):
+		
+		return self.roads[idx]
+
+	def getTrain(self, idx):
+		
+		return self.trains[idx]
+
+	def getRoadByAdjRel(self, idx1, idx2):
+		
+		return self.adjacencyRel[idx1][idx2]
 
 
 	##render
