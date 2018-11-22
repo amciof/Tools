@@ -137,14 +137,15 @@ class Scene:
 			road     = train.road
 
 			roadIdx  = road.idx
-			length   = road.length
 			base1, _ = road.getAdjacentIdx()
+
+			trainPos = train.position
 
 			roadVec = self.roadsVecs[roadIdx]
 			basePos = self.basesInfo[base1].pos
 
 			self.trainsInfo[idx] \
-				= RenderInfo(Scene.TRAIN_DEFAULT, basePos + roadVec * length)
+				= RenderInfo(Scene.TRAIN_DEFAULT, basePos + roadVec * trainPos)
 			
 
 	def __initBasesWorldPos(self):
