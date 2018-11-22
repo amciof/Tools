@@ -1,18 +1,18 @@
 
-class Train:
+from PyQt5.QtGui import QPainter, QColor, QPen
 
-	def __init__(self, jsonTrain):
-		self.goods         = jsonTrain['goods']
-		self.goodsCapacity = jsonTrain['goods_capacity']
-		self.goodsType     = jsonTrain['goods_type']
-		self.idx           = jsonTrain['idx']
-		self.lineIdx       = jsonTrain['line_idx']
-		self.playerIdx     = jsonTrain['player_idx']
-		self.position      = jsonTrain['position']
-		self.speed         = jsonTrain['speed']
+import numpy as np
+
+
+class Move:
+
+	STOP     = 0
+	FORWARD  = +1
+	BACKWARD = -1
 
 class Player:
 
+	##init
 	def __init__(self, jsonLogin):
 		self.home    = jsonLogin['home']['post_idx']
 		self.idx     = jsonLogin['idx']
@@ -20,4 +20,7 @@ class Player:
 		self.name    = jsonLogin['name']
 		self.rating  = jsonLogin['rating']
 		#self.town
-		self.trains  = [Train(obj) for obj in jsonLogin['trains']]
+		self.trains  = [train['idx'] for train in jsonLogin['trains']]
+
+	##Player logic
+	#nothing here)
