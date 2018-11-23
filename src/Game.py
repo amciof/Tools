@@ -1,10 +1,12 @@
 
 from Networking import Network, Action, Options
-from Scene      import Scene
+from Scene         import Scene
+from SceneElements import Speed
 from Player     import Player
 
 from PyQt5.QtGui  import QPainter
 
+import numpy as np
 
 class Game:
 	
@@ -54,8 +56,59 @@ class Game:
 		pass
 
 	def handleMousePress(self, event):
+		#should be reworked
+		train = self.selectedTrain
+		winCoords = np.int32([event.x(), event.y()])
 
-		pass
+		if not train is None:
+			if train.position == 0 or train.position == train.road.length:
+				#get road bases
+				base1, base2 = train.road.getAdjacent()
+				speed = Speed.FORWARD
+
+				if train.position == train.road.length:
+					#swap bases
+					base2, base1 = base1, base2
+					speed = Speed.BACKWARD
+				
+				base = self.scene.hitsAdjacent(base1.idx, winCoords)
+				if not base is None:
+					if base != base2.idx:
+						#hits base on the other road
+						newRoad = self.scene.getRoadByAdjRel(base1.idx, base)
+						train.jumpToRoad(newRoad)
+
+						base1, base2 = newRoad.getAdjacent()
+
+						speed = Speed.FORWARD if base == base2.idx else Speed.BACKWARD
+
+					self.scene.moveTrain(train.idx, speed)
+			else:
+				base1, base2 = train.road.getAdjacentIdx()
+
+				if self.scene.hitsBase(base1, winCoords):
+					self.scene.moveTrain(train.idx, Speed.BACKWARD)
+				if self.scene.hitsBase(base2, winCoords):
+					self.scene.moveTrain(train.idx, Speed.FORWARD)
+
+			self.__resetTrain()
+
+		else:
+			for trainIdx in self.player.trains:
+				if self.scene.hitsTrain(trainIdx, winCoords):
+					self.__selectTrain(trainIdx)
+					break
+
+		self.scene.update()
+
+	def __resetTrain(self):
+		self.scene.setTrainColor(self.selectedTrain.idx, Scene.TRAIN_DEFAULT)
+		self.selectedTrain = None
+
+	def __selectTrain(self, idx):
+		self.selectedTrain = self.scene.getTrain(idx)
+		self.scene.setTrainColor(idx, Scene.TRAIN_SELECTED)
+
 
 	#key handlers
 	def handleKeyPress(self):

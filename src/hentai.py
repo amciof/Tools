@@ -23,15 +23,18 @@ class App(QMainWindow):
 		self.width  = 1280
 		self.height = 720
 
-		self.game = Game(SERVER_ADDR, SERVER_PORT, PLAYER, self)
+		
 
 		self.initUI()
 
-	def initUI(self):
-		self.setWindowTitle(self.title)
-		self.setGeometry(self.left, self.top, self.width, self.height)
-
 		self.show()
+
+	def initUI(self):
+		self.setGeometry(self.left, self.top, self.width, self.height)
+		self.game = Game(SERVER_ADDR, SERVER_PORT, PLAYER, self)
+		self.setWindowTitle(self.title)
+
+		
 
 	def event(self, event):
 		self.game.update(event)

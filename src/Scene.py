@@ -17,7 +17,7 @@ class RenderInfo:
 		self.pos   = pos
 		self.color = color
 
-#OOOAH, IT'S SO FUCKING DEEP
+#♂♂♂OOOAH, IT'S SO FUCKING DEEP♂♂♂
 class Scene:
 
 	BASES_COLORS = {
@@ -190,6 +190,8 @@ class Scene:
 			if self.hitsBase(idx, winCoords):
 				return idx
 
+		return None
+
 	def hitsBase(self, idxBase, winCoords):
 		pos = self.basesWorldPos[idxBase]
 		
@@ -214,14 +216,17 @@ class Scene:
 		road     = train.road
 		trainPos = train.position
 
-		base1, _  = self.roads.getAdjacentIdx()
+		base1, _  = road.getAdjacentIdx()
 
 		roadVec = self.roadsVecs[road.idx]
 		basePos = self.basesInfo[base1].pos
 
-		trainInfo = self.trainsInfo[idxTrain]
-		trainInfo.pos[0] = basePos[0] + roadVec[0] * trainPos
-		trainInfo.pos[1] = basePos[1] + roadVec[1] * trainPos
+		trainModel = self.trainsInfo[idxTrain].pos
+		trainModel[0] = basePos[0] + roadVec[0] * trainPos
+		trainModel[1] = basePos[1] + roadVec[1] * trainPos
+
+		trainWorld = self.trainsWorldPos[idxTrain]
+		self.__toViewport(trainModel, trainWorld)
 
 	
 	def getBase(self, idx):
@@ -240,6 +245,19 @@ class Scene:
 		
 		return self.adjacencyRel[idx1][idx2]
 
+
+	def setTrainColor(self, idx, color):
+		info = self.trainsInfo[idx]
+		info.color = color
+
+	def setBaseColor(self, idx, color):
+		info = self.basesInfo[idx]
+		info.color = color
+
+	##
+	def update(self):
+		#very dirty
+		self.viewport.update()
 
 	##render
 	def renderScene(self):
