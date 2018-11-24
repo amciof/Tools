@@ -79,10 +79,16 @@ class Game:
 						train.jumpToRoad(newRoad)
 
 						base1, base2 = newRoad.getAdjacent()
-
-						speed = Speed.FORWARD if base == base2.idx else Speed.BACKWARD
+						if base == base2.idx:
+							speed = Speed.FORWARD
+							train.position = 0
+						else:
+							speed = Speed.BACKWARD
+							train.position = newRoad.length
 
 					self.scene.moveTrain(train.idx, speed)
+					print('Length  : ', train.road.length)
+					print('Poistion: ', train.position)
 			else:
 				base1, base2 = train.road.getAdjacentIdx()
 

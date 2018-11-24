@@ -196,8 +196,8 @@ class Scene:
 		pos = self.basesWorldPos[idxBase]
 		
 		#adjustWinCoords() -> in future(maybe)
-		return abs(winCoords[0] - pos[0]) < Train.SIZE // 2 \
-			and abs(winCoords[1] - pos[1]) < Train.SIZE // 2
+		return abs(winCoords[0] - pos[0]) < Base.SIZE // 2 \
+			and abs(winCoords[1] - pos[1]) < Base.SIZE // 2
 
 	def hitsTrain(self, idxTrain, winCoords):
 		pos = self.trainsWorldPos[idxTrain]
