@@ -23,7 +23,6 @@ class App(QMainWindow):
 		self.width  = 1280
 		self.height = 720
 
-		
 
 		self.initUI()
 
@@ -33,7 +32,6 @@ class App(QMainWindow):
 		self.setGeometry(self.left, self.top, self.width, self.height)
 		self.game = Game(SERVER_ADDR, SERVER_PORT, PLAYER, self)
 		self.setWindowTitle(self.title)
-
 		
 
 	def event(self, event):

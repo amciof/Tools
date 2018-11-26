@@ -17,7 +17,7 @@ class RenderInfo:
 		self.pos   = pos
 		self.color = color
 
-#♂♂♂OOOAH, IT'S SO FUCKING DEEP♂♂♂
+
 class Scene:
 
 	BASES_COLORS = {
