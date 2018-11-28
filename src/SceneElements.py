@@ -1,4 +1,7 @@
 
+from PyQt5.QtGui  import QPainter, QColor, QPen, QBrush, QPolygonF
+from PyQt5.QtCore import QPointF
+
 #Supply
 class Supply:
 
@@ -17,8 +20,6 @@ class Base:
 	TOWN    = 1
 	MARKET  = 2
 	STORAGE = 3
-
-	SIZE = 40
 
 	def __init__(self, name, idx, baseType):
 		self.events = []
@@ -71,9 +72,9 @@ class Town(Base):
 		self.populationCapacity = jsonTown['population_capacity'] # +
 		self.population         = jsonTown['population']          # +
 
-		self.nextPrice     = jsonTown['next_level_price'] # -
-		self.trainCooldown = jsonTown['train_cooldown']   # -
-		self.level         = jsonTown['level']            # -
+		#self.nextPrice     = jsonTown['next_level_price'] # -
+		#self.trainCooldown = jsonTown['train_cooldown']   # -
+		#self.level         = jsonTown['level']            # -
 
 		self.playerIdx = jsonTown['player_idx'] # -
 
@@ -227,7 +228,7 @@ class Road:
 
 	def getAdjacentIdx(self):
 
-		return self.base1.idx, self.base2.idx
+		return self.base1.getBaseIdx(), self.base2.getBaseIdx()
 
 
 	def getLength(self):
@@ -247,29 +248,28 @@ class Speed:
 	BACKWARD = -1
 
 class Train:
-	
-	SIZE = 20
 
 	def __init__(self, jsonTrain, road):
 		self.goodsCapacity = jsonTrain['goods_capacity'] # -
 		self.goodsType     = jsonTrain['goods_type']     # -
 		self.goods         = jsonTrain['goods']          # -
 
-		self.fuelConsumption = jsonTrain['fuel_consumption'] # -
-		self.fuelCapacity    = jsonTrain['fuel_capacity']    # -
-		self.fuel            = jsonTrain['fuel']             # -
+		#self.fuelConsumption = jsonTrain['fuel_consumption'] # -
+		#self.fuelCapacity    = jsonTrain['fuel_capacity']    # -
+		#self.fuel            = jsonTrain['fuel']             # -
 
-		self.level     = jsonTrain['level']            # -
-		self.nextPrice = jsonTrain['next_level_price'] # -
+		#self.level     = jsonTrain['level']            # -
+		#self.nextPrice = jsonTrain['next_level_price'] # -
 
 		self.playerIdx = jsonTrain['player_idx'] # +
 		self.idx       = jsonTrain['idx']        # +
 
-		self.cooldown = jsonTrain['cooldown'] # -
+		#self.cooldown = jsonTrain['cooldown'] # -
 		self.position = jsonTrain['position'] # +
 		self.speed    = jsonTrain['speed']    # +
 
-		self.road  = road # +
+		self.road  = road  # +
+		self.moved = False # +
 
 	
 	#useless shit
@@ -303,16 +303,23 @@ class Train:
 			curr = base1 if pos == 0 else base2
 
 			base1, base2 = newRoad.getAdjacent()
-			if curr.getIdx() == base1.getIdx():
+			if curr.getBaseIdx() == base1.getBaseIdx():
 			   self.position = 0
-			elif curr.getIdx() == base2.getIdx():
+			   self.road = newRoad
+			elif curr.getBaseIdx() == base2.getBaseIdx():
 				self.position = newRoad.getLength()
+				self.road = newRoad
 
 			self.speed = 0
 
 	def getRoad(self):
 
 		return self.road
+
+
+	def getPosition(self):
+
+		return self.position
 
 
 	#logic
@@ -331,7 +338,7 @@ class Train:
 		else:
 			self.position = newPos
 
-	def moveTo(self, baseIdx):
+	def setDir(self, baseIdx):
 		idx1, idx2 = self.road.getAdjacentIdx()
 
 		if baseIdx == idx1:
@@ -343,6 +350,11 @@ class Train:
 	def upgrade(self):
 
 		pass
+
+
+	def onCooldown(self):
+
+		return self.cooldown == 0
 
 
 	def withdrawSupply(self):

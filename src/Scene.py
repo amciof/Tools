@@ -1,5 +1,6 @@
 
-from PyQt5.QtGui import QPainter, QColor, QPen, QBrush
+from PyQt5.QtGui  import QPainter, QColor, QPen, QBrush, QPolygonF
+from PyQt5.QtCore import QPointF
 
 from SceneElements import Base, Town, Market, Storage
 from SceneElements import Road, Speed, Train
@@ -11,239 +12,208 @@ import math
 import json
 
 
+#I dont know where to put this
+def initPolygon(sides):
+	if sides < 3:
+		return None
+
+	delta = 2 * math.pi / sides
+	phase = (math.pi - delta) / 2
+	res   = np.zeros((sides, 3), np.float32)
+	for i in range(sides):
+		res[i][0] = math.cos(delta * i + phase)
+		res[i][1] = math.sin(delta * i + phase)
+		res[i][2] = 1.0
+
+	return res
+
+#and this
+def modelMat(size, pos):
+	model = np.zeros((3, 3), np.float32)
+
+	model[0][0] = size / 2.0
+	model[1][1] = size / 2.0
+	model[2][2] = 1.0
+	model[0][2] = pos[0]
+	model[1][2] = pos[1]
+
+	return model
+
+def orthoMat():
+
+	pass
+
+def cameraMat():
+
+	pass
+
+
 class RenderInfo:
 
-	def __init__(self, color, pos):
-		self.pos   = pos
+	def __init__(self, data, model, color):
+		self.data  = data
+		self.model = model
 		self.color = color
 
 
 class Scene:
 
-	BASES_COLORS = {
-		  Base.BASE    : QColor(255, 255, 255)
-		, Base.TOWN    : QColor(255, 255, 255)
-		, Base.MARKET  : QColor(255, 255, 255)
-		, Base.STORAGE : QColor(255, 255, 255)
+	RESOURCES = {
+		Base.BASE      : initPolygon(6)
+		, Base.TOWN    : initPolygon(4)
+		, Base.MARKET  : initPolygon(3)
+		, Base.STORAGE : initPolygon(5)
 	}
 
+	#BASE_SIZES = {
+	#	  Base.BASE    : 40
+	#	, Base.TOWN    : 80
+	#	, Base.MARKET  : 60
+	#	, Base.STORAGE : 60
+	#}
+
+	BASE_SIZE = 60
+
+	BASE_COLORS = {
+		  Base.BASE    : QColor(200, 255, 200)
+		, Base.TOWN    : QColor(255,   0,   0)
+		, Base.MARKET  : QColor(  0, 255,   0)
+		, Base.STORAGE : QColor(  0,   0, 255)
+	}
+
+	ROAD_COLOR = QColor(  0,   0,   0)
+
+	TRAIN_SIZE = 25
+
 	TRAIN_DEFAULT  = QColor(255, 255, 255)
-	TRAIN_SELECTED = QColor(255,   0,   0)
+	TRAIN_SELECTED = QColor(250, 125, 250)
 
-	ROAD_COLOR    = QColor(  0,   0,   0)
+	MARGIN = 0.05
 
-	COMPRESSION = 0.85
 
 	##init
-	def __init__(self, jsonLogin, jsonMap, viewport):
-		#viewport reference to window
+	def __init__(self, bases, roads, trains, window):
 
-		self.__initBases(jsonMap)
-		self.__initRoads(jsonMap)
-		self.__initAdjacencyRel(jsonMap)
+		self.__initViewport(window)
 
-		self.__initTrains(jsonLogin)
+		self.__initBasesInfo(bases, roads)
 
-		self.__initViewport(viewport)
+		self.__initRoadsInfo(roads)
+		self.__initRoadsVectors(roads)
 
-		self.__initBasesInfo(jsonMap)
-		self.__initRoadsVectors()
-		self.__initTrainsInfo()
+		self.__initTrainsInfo(trains)
 
-		self.__initBasesWorldPos()
-		self.__initTrainsWorldPos()
+	#can be public
+	def __initViewport(self, window):
 
-		self.__initBasesRenderBuffer()
-		self.__initTrainsRenderBuffer()
+		self.w = window.size().width()
+		self.h = window.size().height()
 
 
-	def __initBases(self, jsonMap):#jsonLogin
-		#TODO: should init towns & markets & storages first
-		self.bases = {}
-
-		for jsonPoint in jsonMap['points']:
-			idx = jsonPoint['idx']
-
-			self.bases[idx] = Base(jsonPoint, Base.BASE)
-
-	def __initRoads(self, jsonMap):
-		self.roads = {}
-
-		for jsonLine in jsonMap['lines']:
-			idx          = jsonLine['idx']
-			base1, base2 = jsonLine['points']
-
-			self.roads[idx] = Road(jsonLine, self.bases[base1], self.bases[base2])
-	
-	def __initAdjacencyRel(self, jsonMap):
-		self.adjacencyRel = {idx : {} for idx in self.bases}
-
-		for road in self.roads.values():
-			u, v = road.getAdjacentIdx()
-
-			self.adjacencyRel[u][v] = road
-			self.adjacencyRel[v][u] = road
-
-	def __initTrains(self, jsonLogin):
-		self.trains = {}
-
-		for jsonTrain in jsonLogin['trains']:
-			idx     = jsonTrain['idx']
-			roadIdx = jsonTrain['line_idx']
-
-			self.trains[idx] = Train(jsonTrain, self.roads[roadIdx])
-
-	def __initViewport(self, viewport):
-
-		self.viewport = viewport
-
-
-	def __initBasesInfo(self, jsonMap):
-		MAGIC_CONST = 5
+	def __initBasesInfo(self, bases, roads):
+		MAGIC_CONST = 3
 
 		graph = nx.Graph()
 
-		for base in self.bases.values():
-			graph.add_node(base.idx)
+		for idx in bases:
+			graph.add_node(idx)
 
-		for road in self.roads.values():
+		for road in roads.values():
 			u, v = road.getAdjacentIdx()
 			graph.add_edge(u, v)
 
-		assigned = nx.spring_layout(graph, iterations = MAGIC_CONST * len(jsonMap['points']))
+		assigned = nx.spring_layout(graph, iterations = MAGIC_CONST * len(bases))
 
 		self.basesInfo = {}
 		for idx, pos in assigned.items():
-			base = self.bases[idx]
+			base     = bases[idx]
+			baseType = base.getType()
+			size     = Scene.BASE_SIZE#Scene.BASE_SIZES[baseType]
 
-			self.basesInfo[idx] = RenderInfo(Scene.BASES_COLORS[base.baseType], pos)
+			data  = Scene.RESOURCES[baseType]
 
-	def __initRoadsVectors(self):
+			pos[0] = (pos[0] + 1.0) * ((1 - 2 * Scene.MARGIN) * self.w / 2) + self.w * Scene.MARGIN
+			pos[1] = (pos[1] + 1.0) * ((1 - 2 * Scene.MARGIN) * self.h / 2) + self.h * Scene.MARGIN
+
+			model = modelMat(size, pos)
+			color = Scene.BASE_COLORS[baseType]
+			
+			self.basesInfo[idx] = RenderInfo(data, model, color)
+
+	def __initRoadsInfo(self, roads):
+		self.roadsInfo = {}
+
+		for idx, road in roads.items():
+
+			idx1, idx2 = road.getAdjacentIdx()
+
+			data  = np.int32([idx1, idx2])
+			model = None
+			color = Scene.ROAD_COLOR
+
+			self.roadsInfo[idx] = RenderInfo(data, model, color)
+
+	def __initTrainsInfo(self, trains):
+		self.trainsInfo = {}
+
+		for idx, train in trains.items():
+			data  = Scene.RESOURCES[Base.TOWN]
+			model = modelMat(Scene.TRAIN_SIZE, np.float32([0, 0]))
+			color = Scene.TRAIN_DEFAULT
+
+			self.trainsInfo[idx] = RenderInfo(data, model, color)
+
+			self.updateTrain(train)
+	
+	def __initLabelsInfo(self):
+
+		pass
+
+			
+	def __initRoadsVectors(self, roads):
 		self.roadsVecs = {}
 
-		for idx, road in self.roads.items():
+		for idx, road in roads.items():
 			base1, base2 = road.getAdjacentIdx()
 
-			pos1 = self.basesInfo[base1].pos
-			pos2 = self.basesInfo[base2].pos
+			mod1 = self.basesInfo[base1].model
+			mod2 = self.basesInfo[base2].model
 
-			vec = (pos2 - pos1) / road.length
+			vec = np.float32([mod2[0][2] - mod1[0][2], mod2[1][2] - mod1[1][2]])
+			vec /= road.length
 
 			self.roadsVecs[idx] = vec
 
-	def __initTrainsInfo(self):
-		self.trainsInfo = {}
 
-		for idx, train in self.trains.items():
-			road     = train.road
-
-			roadIdx  = road.idx
-			base1, _ = road.getAdjacentIdx()
-
-			trainPos = train.position
-
-			roadVec = self.roadsVecs[roadIdx]
-			basePos = self.basesInfo[base1].pos
-
-			self.trainsInfo[idx] \
-				= RenderInfo(Scene.TRAIN_DEFAULT, basePos + roadVec * trainPos)
-			
-
-	def __initBasesWorldPos(self):
-		self.basesWorldPos = {}
-
-		for idx, info in self.basesInfo.items():
-			worldPos = np.int32([0, 0])
-
-			self.__toViewport(info.pos, worldPos)
-
-			self.basesWorldPos[idx] = worldPos
-
-	def __initTrainsWorldPos(self):
-		self.trainsWorldPos = {}
-		
-		for idx, info in self.trainsInfo.items():
-			worldPos = np.int32([0, 0])
-
-			self.__toViewport(info.pos, worldPos)
-
-			self.trainsWorldPos[idx] = worldPos
-
-
-	def __initBasesRenderBuffer(self):
-		self.basesRenderBuffer = {}
-
-		for idx in self.bases:
-			self.basesRenderBuffer[idx] = np.int32([0, 0])
-
-	def __initTrainsRenderBuffer(self):
-		self.trainsRenderBuffer = {}
-
-		for idx in self.trains:
-			self.trainsRenderBuffer[idx] = np.int32([0, 0])
-
-
-	##logic(fkng clicks)
-	def hitsAdjacent(self, idxBase, winCoords):
-		#can be O(log(V)), but no need: this will soon shrink))
-		for idx in self.adjacencyRel[idxBase]:
-			if self.hitsBase(idx, winCoords):
-				return idx
-
-		return None
-
+	##logic
 	def hitsBase(self, idxBase, winCoords):
-		pos = self.basesWorldPos[idxBase]
+		model = self.basesInfo[idxBase].model
 		
 		#adjustWinCoords() -> in future(maybe)
-		return abs(winCoords[0] - pos[0]) < Base.SIZE // 2 \
-			and abs(winCoords[1] - pos[1]) < Base.SIZE // 2
-
+		return abs(winCoords[0] - model[0][2]) < Scene.BASE_SIZE // 2 \
+			and abs(winCoords[1] - model[1][2]) < Scene.BASE_SIZE // 2
+	
 	def hitsTrain(self, idxTrain, winCoords):
-		pos = self.trainsWorldPos[idxTrain]
+		model = self.trainsInfo[idxTrain].model
 		
 		#adjustWinCoords() -> in future(maybe)
-		return abs(winCoords[0] - pos[0]) < Train.SIZE // 2 \
-			and abs(winCoords[1] - pos[1]) < Train.SIZE // 2
-
-
-	def moveTrain(self, idxTrain, speed):
-		train = self.trains[idxTrain]
-
-		train.move(speed)
-
-		#update train pos
-		road     = train.road
-		trainPos = train.position
-
-		base1, _  = road.getAdjacentIdx()
-
-		roadVec = self.roadsVecs[road.idx]
-		basePos = self.basesInfo[base1].pos
-
-		trainModel = self.trainsInfo[idxTrain].pos
-		trainModel[0] = basePos[0] + roadVec[0] * trainPos
-		trainModel[1] = basePos[1] + roadVec[1] * trainPos
-
-		trainWorld = self.trainsWorldPos[idxTrain]
-		self.__toViewport(trainModel, trainWorld)
+		return abs(winCoords[0] - model[0][2]) < Scene.TRAIN_SIZE // 2 \
+			and abs(winCoords[1] - model[1][2]) < Scene.TRAIN_SIZE // 2
 
 	
-	def getBase(self, idx):
-		
-		return self.bases[idx]
+	def updateTrain(self, train):
+		road = train.getRoad()
+		coef = train.getPosition()
 
-	def getRoad(self, idx):
-		
-		return self.roads[idx]
+		idx1, idx2 = road.getAdjacentIdx()
 
-	def getTrain(self, idx):
-		
-		return self.trains[idx]
+		roadVec = self.roadsVecs[road.getIdx()]
+		baseMod = self.basesInfo[idx1].model
 
-	def getRoadByAdjRel(self, idx1, idx2):
-		
-		return self.adjacencyRel[idx1][idx2]
+		trainMod = self.trainsInfo[train.getIdx()].model
+
+		trainMod[0][2] = baseMod[0][2] + coef * roadVec[0]
+		trainMod[1][2] = baseMod[1][2] + coef * roadVec[1]
 
 
 	def setTrainColor(self, idx, color):
@@ -254,75 +224,20 @@ class Scene:
 		info = self.basesInfo[idx]
 		info.color = color
 
-	##
-	def update(self):
-		#very dirty
-		self.viewport.update()
 
 	##render
-	def renderScene(self):
-		self.__computeBasesPos()
-		self.__computeTrainsPos()
-
-		context = self.__getContext()
-
+	def renderScene(self, context):
 		self.__drawRoads(context)
 		self.__drawBases(context)
 		self.__drawTrains(context)
-
-		self.__releaseContext(context)
 	
-
-	def __getContext(self):
-
-		return QPainter(self.viewport)
-
-	def __releaseContext(self, context):
-
-		context.end()
-
-
-	def __computeBasesPos(self):
-
-		self.__computePos(self.basesInfo, self.basesRenderBuffer)
-	
-	def __computeTrainsPos(self):
-		
-		self.__computePos(self.trainsInfo ,self.trainsRenderBuffer)
-
-
-	def __computePos(self, renderInfo, renderBuffer):
-		for idx, buffer in renderBuffer.items():
-			pos = renderInfo[idx].pos
-
-			self.__toViewport(pos, buffer)
-
-	def __orthoTransform(self, pos):
-
-		pass
-
-	def __toViewport(self, model, world):
-		w = self.viewport.size().width()
-		h = self.viewport.size().height()
-
-		world[0] = np.int32((Scene.COMPRESSION * model[0] + 1.0) * w / 2)
-		world[1] = np.int32((Scene.COMPRESSION * model[1] + 1.0) * h / 2)
-	
-
 	def __drawBases(self, context):
 		restore = context.brush()
 
-		for idx, pos in self.basesRenderBuffer.items():
-			x, y  = pos
-			color = self.basesInfo[idx].color
+		for idx, info in self.basesInfo.items():
+			context.setBrush(QBrush(info.color))
 
-			context.setBrush(QBrush(color))
-			context.drawEllipse(
-				  x - Base.SIZE // 2
-				, y - Base.SIZE // 2
-				, Base.SIZE
-				, Base.SIZE
-			)
+			self.__drawPolygon(context, info.data, info.model)
 
 		context.setBrush(restore)
 
@@ -330,29 +245,41 @@ class Scene:
 		restore = context.pen()
 
 		context.setPen(Scene.ROAD_COLOR)
-		for road in self.roads.values():
-			first, second = road.getAdjacentIdx()
 
-			x1, y1 = self.basesRenderBuffer[first]
-			x2, y2 = self.basesRenderBuffer[second]
+		for idx, info in self.roadsInfo.items():
+			idx1, idx2 = info.data
 
-			context.drawLine(x1, y1, x2, y2)
+			mod1 = self.basesInfo[idx1].model
+			mod2 = self.basesInfo[idx2].model
+
+			context.drawLine(
+				mod1[0][2], mod1[1][2]
+				, mod2[0][2], mod2[1][2]
+			)
 
 		context.setPen(restore)
-
+	
 	def __drawTrains(self, context):
 		restore = context.brush()
 
-		for idx, pos in self.trainsRenderBuffer.items():
-			x, y  = pos
-			color = self.trainsInfo[idx].color
+		for idx, info in self.trainsInfo.items():
+			context.setBrush(QBrush(info.color))
 
-			context.setBrush(QBrush(color))
-			context.drawRect(
-				  x - Train.SIZE // 2
-				, y - Train.SIZE // 2
-				, Train.SIZE
-				, Train.SIZE
-			)
+			self.__drawPolygon(context, info.data, info.model)
 
 		context.setBrush(restore)
+
+	def __drawLabels(self, context):
+
+		pass
+
+
+	def __drawPolygon(self, context, data, model):
+		buffer = QPolygonF()
+
+		for point in data:
+			point = np.matmul(model, point)
+
+			buffer.append(QPointF(point[0], point[1]))
+			
+		context.drawPolygon(buffer)

@@ -16,5 +16,10 @@ class Player:
 		#self.town
 		self.trains  = [train['idx'] for train in jsonLogin['trains']]
 
+	#get/set
+	def getAllIdx(self):
+
+		return self.trains
+
 	##Player logic
 	#nothing here)

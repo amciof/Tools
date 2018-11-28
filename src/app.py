@@ -29,8 +29,12 @@ class App(QMainWindow):
 		self.show()
 
 	def initUI(self):
+		#will be reworked
 		self.setGeometry(self.left, self.top, self.width, self.height)
+		self.setFixedSize(self.width, self.height)
+
 		self.game = Game(SERVER_ADDR, SERVER_PORT, PLAYER, self)
+
 		self.setWindowTitle(self.title)
 		
 
