@@ -83,7 +83,7 @@ class Network:
 	def requestMove(self, line_idx, speed, train_idx):
 		action = b'\x03\x00\x00\x00'
 		data   = {
-			'line_idx'  : line_idx
+			  'line_idx'  : line_idx
 			, 'speed'     : speed
 			, 'train_idx' : train_idx
 		}
@@ -169,7 +169,9 @@ class Network:
 		respond['length'] = length
 
 		msg = self.__getWholeMsg(length)
-		msg = json.loads(msg.decode('ascii'))
+
+		if msg != b'':
+			msg = json.loads(msg.decode('ascii'))
 		
 		respond['msg'] = msg
 

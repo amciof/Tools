@@ -5,6 +5,7 @@ from SceneElements import Base, Town, Market, Storage, Road, Speed, Train
 from Player     import Player
 
 from PyQt5.QtGui  import QPainter
+from PyQt5.QtCore import QTimer
 
 import numpy as np
 
@@ -12,57 +13,62 @@ import json
 
 class Game:
 	
+	EVENT_TIMER       = 1
 	EVENT_MOUSE_PRESS = 2
 	EVENT_PAINT       = 12
 
+	BUTTON_LEFT  = 1
+	BUTTON_RIGHT = 2
+
+	GAME_SLICE = 1000
+
+
 	##init section
 	def __init__(self, serverAddr, portNum, playerName, window):
-		##---main window
-		self.window = window
+		self.__initParent(window)
 
-		##---init network---
-		#self.__initNetwork(serverAddr, portNum)
+		self.__initNetwork(serverAddr, portNum)
 
-		##--init all entities---
-		#playerResp = self.net.requestLogin(playerName)
-		#mapResp0 = self.net.requestMap(Options.LAYER_0)
-		#mapResp1 = self.net.requestMap(Options.LAYER_1)
+		playerResp = self.net.requestLogin(playerName)
+		mapResp0   = self.net.requestMap(Options.LAYER_0)
+		mapResp1   = self.net.requestMap(Options.LAYER_1)
 
-		with open('Examples/Login.txt') as file:
-			playerResp = json.load(file)
-		with open('Examples/Map0.txt')  as file:
-			mapResp0   = json.load(file)
-		with open('Examples/Map1.txt')  as file:
-			mapResp1   = json.load(file)
+		#with open('Examples/Login.txt') as file:
+		#	playerResp = json.load(file)
+		#with open('Examples/Map0.txt')  as file:
+		#	mapResp0   = json.load(file)
+		#with open('Examples/Map1.txt')  as file:
+		#	mapResp1   = json.load(file)
 
-		#self.__initBases(mapResp0.msg, mapResp1.msg)
-		self.__initBases(mapResp0, mapResp1)
+		self.__initBases(mapResp0.msg, mapResp1.msg)
+		#self.__initBases(mapResp0, mapResp1)
 
-		#self.__initRoads(mapResp0.msg)
-		self.__initRoads(mapResp0)
+		self.__initRoads(mapResp0.msg)
+		#self.__initRoads(mapResp0)
 
-		#self.__initAdjacencyRel(mapResp0.msg)
-		self.__initAdjacencyRel(mapResp0)
+		self.__initAdjacencyRel(mapResp0.msg)
+		#self.__initAdjacencyRel(mapResp0)
 
-		#self.__initTrains(playerResp.msg)
-		self.__initTrains(playerResp)
+		self.__initTrains(playerResp.msg)
+		#self.__initTrains(playerResp)
 
 		##---init scene---
 		self.__initScene()
 		
 		##player
-		#self.__initPlayer(playerResp.msg)
-		self.player = Player(playerResp)
-		self.__initPlayer(playerResp)
+		self.__initPlayer(playerResp.msg)
+		#self.__initPlayer(playerResp)
 
 		##state params
 		self.selectedTrain = None
 
+	def __initParent(self, window):
+
+		self.window = window
 
 	def __initNetwork(self, serverAddr, portNum):
 
 		self.net = Network(serverAddr, portNum)
-
 
 	def __initBases(self, jsonMap0, jsonMap1):
 		self.bases = {}
@@ -112,7 +118,6 @@ class Game:
 
 			self.trains[idx] = Train(jsonTrain, self.roads[roadIdx])
 
-
 	def __initScene(self):
 		
 		self.scene = Scene(
@@ -122,20 +127,26 @@ class Game:
 			, self.window
 		)
 
-
 	def __initPlayer(self, jsonPlayer):
 
 		self.player = Player(jsonPlayer)
 
 
-	##events
-	#update logic(main method)
+	##logic
+	def start(self):
+
+		self.__startGameSlice()
+
+	#update
 	def update(self, event):
 		if event.type() == Game.EVENT_MOUSE_PRESS:
 			self.handleMousePress(event)
 
 		elif event.type() == Game.EVENT_PAINT:
 			self.render()
+
+		elif event.type() == Game.EVENT_TIMER:
+			self.handleTimerEvent(event)
 
 
 	#render
@@ -147,106 +158,188 @@ class Game:
 		context.end()
 
 
-	#mouse handlers
+	#handlers
 	def handleMouseMove(self):
+
 		pass
 
 	def handleMouseRelease(self):
+
 		pass
 
 
 	def handleMousePress(self, event):
-		#should be reworked
-		#train = self.selectedTrain
-		#winCoords = np.int32([event.x(), event.y()])
+		if event.button() == Game.BUTTON_RIGHT:
+			print('Turn command from player')
+			self.__turn()
+			return
 
-		#if not train is None:
-		#	if train.position == 0 or train.position == train.road.length:
-				
-		#		if train.position == train.road.length:
-		#			pass
-				
-		#		if not base is None:
-		#			if base != base2.idx:
-		#				if base == base2.idx:
-		#					pass
-		#				else:
-		#					pass
-		#	else:
-		#		if self.scene.hitsBase(base1, winCoords):
-		#			pass
-		#		if self.scene.hitsBase(base2, winCoords):
-		#			pass
-
-		#	self.__resetTrain()
-
-		#else:
-		#	for trainIdx in self.player.trains:
-		#		if self.scene.hitsTrain(trainIdx, winCoords):
-		#			self.__selectTrain(trainIdx)
-		#			break
-
-		train = self.selectedTrain
 		winCoords = np.int32([event.x(), event.y()])
 
-		if not train is None:
-			pos    = train.getPosition()
-			road   = train.getRoad()
-			length = road.getLength()
-
-			idx1, idx2 = road.getAdjacentIdx()
-
-			if pos == 0 or pos == length:
-				check = idx1 if pos == 0 else idx2
-
-				for idx, road in self.adjacencyRel[check].items():
-					if self.scene.hitsBase(idx, winCoords):
-						self.__moveTrain(False, road, idx)
-						break
-			else:
-				if self.scene.hitsBase(idx1, winCoords):
-					dir = idx1
-				elif self.scene.hitsBase(idx2, winCoords):
-					dir = idx2	
-				self.__moveTrain(True, None, dir)
-
-			self.scene.updateTrain(train)
-			self.__resetTrain()
-			self.__removeOffered()
+		if not self.selectedTrain is None:
+			self.__moveTrain(winCoords)
 		else:
-			for idx in self.player.getAllIdx():
-				if self.scene.hitsTrain(idx, winCoords):
-					self.__selectTrain(idx)
-					self.__offerChoice()
-					break
+			self.__selectTrain(winCoords)
 
 		self.window.update()
 
-	def __moveTrain(self, same, road, base):
-		if not same:
-			self.selectedTrain.setRoad(road)
+	def __selectTrain(self, winCoords):
+		print('Train not selected')
 
-		self.selectedTrain.setDir(base)
-		self.selectedTrain.move()
+		for idx in self.player.getAllIdx():
+			moved = self.trains[idx].isMoved() 
+			if not moved and self.scene.hitsTrain(idx, winCoords):
+				self.selectedTrain = self.trains[idx]
+				self.scene.setTrainColor(idx, Scene.TRAIN_SELECTED)
+
+				train = self.selectedTrain
+				train.setSpeed(Speed.STOP)
+				resp  = self.net.requestMove(train.road.getIdx(), train.getSpeed(), train.getIdx())
+				print('Result:', resp.result)
+				print('Msg   :', resp.msg)
+				train.printStats()
+
+				self.__offerChoice()
+				break		
+
+	def __moveTrain(self, winCoords):
+		train = self.selectedTrain
+
+		print('Selected train: ', train.getIdx())
+
+		pos    = train.getPosition()
+		road   = train.getRoad()
+		length = road.getLength()
+
+		idx1, idx2 = road.getAdjacentIdx()
+
+		if pos == 0 or pos == length:
+			print('Train in base')
+
+			check = idx1 if pos == 0 else idx2
+
+			for idx, road in self.adjacencyRel[check].items():
+				print('Hit test ', idx)
+				if self.scene.hitsBase(idx, winCoords):
+					print('Success')
+					idx1, idx2 = road.getAdjacentIdx()
+
+					speed = Speed.FORWARD if check == idx1 else Speed.BACKWARD
+
+					print('=Before')
+					train.printStats()
+
+					train.setRoad(road)
+					train.setSpeed(speed)
+					train.move()
+
+					print('=After')
+					train.printStats()
+
+					resp = self.net.requestMove(road.getIdx(), speed, train.getIdx())
+					print('Result:', resp.result)
+					print('Msg   :', resp.msg)
+					break
+		else:
+			print('Train in way')
+
+			hit1 = self.scene.hitsBase(idx1, winCoords)
+			hit2 = self.scene.hitsBase(idx2, winCoords)
+			if hit1 or hit2:
+				speed = Speed.BACKWARD if hit1 else Speed.FORWARD
+
+				print('=Before')
+				train.printStats()
+
+				train.setSpeed(speed)
+				train.move()
+			
+				print('=After')
+				train.printStats()
+
+				road = train.getRoad()
+				resp = self.net.requestMove(road.getIdx(), speed, train.getIdx())
+				print('Result:', resp.result)
+				print('Msg   :', resp.msg)
+			
+		self.scene.updateTrain(train)
+		self.__resetTrain()
+		self.__removeOffered()
 
 	def __resetTrain(self):
 		self.scene.setTrainColor(self.selectedTrain.idx, Scene.TRAIN_DEFAULT)
 		self.selectedTrain = None
 
-	def __selectTrain(self, idx):
-		self.selectedTrain = self.trains[idx]
-		self.scene.setTrainColor(idx, Scene.TRAIN_SELECTED)
 
 	def __offerChoice(self):
+
 		pass
 
 	def __removeOffered(self):
+
 		pass
 
 
 	#key handlers
 	def handleKeyPress(self):
+
 		pass
 
 	def handleKeyRelease(self):
+
 		pass
+
+
+	#timers
+	def handleTimerEvent(self, event):
+		print('-----Timeout-----')
+		self.__turn()
+
+	def __startGameSlice(self):
+
+		self.turnTimerID = self.window.startTimer(Game.GAME_SLICE)
+
+	def __resetGameSlice(self):
+
+		self.window.killTimer(self.turnTimerID)
+		self.__startGameSlice()
+
+
+	def __turn(self):
+		print('turn')
+
+		self.net.requestTurn()
+		mapLayer1 = self.net.requestMap(Options.LAYER_1)
+
+		self.__updateBases(mapLayer1)
+		self.__updateTrains(mapLayer1)
+
+		self.__resetGameSlice()
+		print('end turn')
+
+		self.window.update()
+
+	def __updateBases(self, mapLayer1):
+		for jsonBase in mapLayer1.msg['posts']:
+			idx = jsonBase['point_idx']
+
+			self.bases[idx].update(jsonBase)
+	
+	def __updateTrains(self, mapLayer1):
+		for jsonTrain in mapLayer1.msg['trains']:
+			roadIdx = jsonTrain['line_idx']
+			road    = self.roads[roadIdx]
+
+			idx = jsonTrain['idx']
+
+			train = self.trains[idx]
+
+			print('---Before---')
+			train.printStats()
+			train.update(jsonTrain, {'road' : road})
+			print('---After---')
+			train.printStats()
+
+			self.scene.updateTrain(train)
+
+			

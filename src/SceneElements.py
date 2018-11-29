@@ -2,17 +2,6 @@
 from PyQt5.QtGui  import QPainter, QColor, QPen, QBrush, QPolygonF
 from PyQt5.QtCore import QPointF
 
-#Supply
-class Supply:
-
-	NO_SUPPLY = 0
-	ARMOR     = 1
-	PRODUCT   = 2
-
-	def __init__(self, type, amount):
-		self.type   = type
-		self.amount = amount
-
 #bases
 class Base:
 
@@ -47,13 +36,6 @@ class Base:
 	def addEvent(self):
 
 		pass
-
-	#?????
-	#def storeSupply(self):
-	#	pass
-
-	#def withdrawSupply(self):
-	#	pass
 
 
 class Town(Base):
@@ -98,14 +80,12 @@ class Town(Base):
 
 
 	#logic
-	def update(self):
-		#for event in self.events:
-		#	event.apply()
+	def update(self, jsonUpdate):
 
-		product = self.product - self.population
-		product = 0 if product < 0 else product
-
-		self.product = product
+		self.product            = jsonUpdate['product']
+		self.productCapacity    =  jsonUpdate['product_capacity']
+		self.population         = jsonUpdate['population']
+		self.populationCapacity = jsonUpdate['population_capacity']
 
 	def addEvent(self, event):
 
@@ -165,11 +145,10 @@ class Market(Base):
 
 	
 	#logic
-	def update(self):
-		self.product = min(
-			self.product + self.replenishment
-			, self.productCapacity
-		)
+
+	def update(self, jsonUpdate):
+		self.product         = jsonUpdate['product']
+		self.productCapacity = jsonUpdate['product_capacity']
 
 	#????
 	def withdrawProduct(self, amount):
@@ -243,7 +222,7 @@ class Road:
 
 #i like trains
 class Speed:
-	STOP     = 0
+	STOP     = +0
 	FORWARD  = +1
 	BACKWARD = -1
 
@@ -272,7 +251,7 @@ class Train:
 		self.moved = False # +
 
 	
-	#useless shit
+	#get/set
 	def getPlayerIdx(self):
 
 		return self.playerIdx
@@ -293,22 +272,21 @@ class Train:
 
 	
 	def setRoad(self, newRoad):
-		##hmmm this looks sucpicious
 		old = self.road
 		pos = self.position
 
 		if pos == 0 or pos == old.getLength():
-			base1, base2 = old.getAdjacent()
+			idx1, idx2 = old.getAdjacentIdx()
 
-			curr = base1 if pos == 0 else base2
+			curr = idx1 if pos == 0 else idx2
 
-			base1, base2 = newRoad.getAdjacent()
-			if curr.getBaseIdx() == base1.getBaseIdx():
+			idx1, idx2 = newRoad.getAdjacentIdx()
+			if curr == idx1:
 			   self.position = 0
-			   self.road = newRoad
-			elif curr.getBaseIdx() == base2.getBaseIdx():
+			   self.road     = newRoad
+			elif curr == idx2:
 				self.position = newRoad.getLength()
-				self.road = newRoad
+				self.road     = newRoad
 
 			self.speed = 0
 
@@ -321,30 +299,32 @@ class Train:
 
 		return self.position
 
-
+	
 	#logic
+	def isMoved(self):
+
+		return self.moved
+
+	def reset(self):
+
+		self.moved = False
+
 	def move(self):
+		if self.moved:
+			return
+
 		length = self.road.length
 		pos    = self.position
 		speed  = self.speed
 	
 		newPos = pos + speed
 		if newPos > length:
-			self.speed    = 0
 			self.position = length
 		elif newPos < 0:
-			self.speed    = 0
 			self.position = 0
 		else:
 			self.position = newPos
-
-	def setDir(self, baseIdx):
-		idx1, idx2 = self.road.getAdjacentIdx()
-
-		if baseIdx == idx1:
-			self.speed = Speed.BACKWARD
-		elif baseIdx == idx2:
-			self.speed = Speed.FORWARD
+			self.moved    = True
 
 
 	def upgrade(self):
@@ -357,24 +337,22 @@ class Train:
 		return self.cooldown == 0
 
 
-	def withdrawSupply(self):
-		supply   = self.goods
-		supType = self.goodsType
-		
-		self.goods     = 0
-		self.goodsType = None
+	def update(self, jsonUpdate, additional):
+		self.goods         = jsonUpdate['goods']
+		self.goodsCapacity = jsonUpdate['goods_capacity']
+		self.goodsType     = jsonUpdate['goods_type']
+		self.position      = jsonUpdate['position']
+		self.speed         = jsonUpdate['speed']
 
-		return supply, supType
+		self.road  = additional['road']
+		self.moved = False
 
-	def storeSupply(self, amount, supplyType):
-		if self.goodsType == supplyType:
-			available = self.goodsCapacity - self.goods
+	def printStats(self):
+		print('Goods   : ', self.goods)
+		print('Position: ', self.position)
+		print('Speed   : ', self.speed)
+		print('Moved   : ', self.moved)
+		print('Road    : ', self.road.getIdx())
+		print('Length  : ', self.road.getLength())
+		print('UV      : ', self.road.getAdjacentIdx())
 
-			if amount <= available:
-				self.goods += amount
-				return True, 0
-			else:
-				self.goods += available
-				return True, amount - available
-
-		return False, amount

@@ -9,41 +9,39 @@ from Game import Game
 
 SERVER_ADDR = 'wgforge-srv.wargaming.net'
 SERVER_PORT = 443
-PLAYER = 'Waifu'
+PLAYER = 'Eto transliteraciya'
 
 
 class App(QMainWindow):
 
-	def __init__(self):
+	def __init__(self, startX, startY, width, height):
 		super().__init__()
 
-		self.title = 'Anime kills'
-		self.left   = 100
-		self.top    = 100
-		self.width  = 1280
-		self.height = 720
+		self.title = 'WG KRUTA'
 
+		self.setGeometry(startX, startY, width, height)
 
-		self.initUI()
+		self.game = Game(SERVER_ADDR, SERVER_PORT, PLAYER, self)
+		self.game.start()
+
+		self.setFixedSize(width, height)
+		self.setWindowTitle(self.title)
 
 		self.show()
 
+
 	def initUI(self):
-		#will be reworked
-		self.setGeometry(self.left, self.top, self.width, self.height)
-		self.setFixedSize(self.width, self.height)
+		pass
 
-		self.game = Game(SERVER_ADDR, SERVER_PORT, PLAYER, self)
-
-		self.setWindowTitle(self.title)
-		
 
 	def event(self, event):
 		self.game.update(event)
+
 		return QMainWindow.event(self, event)
 
 
 if __name__ == '__main__':
 	app = QApplication(sys.argv)
-	ex = App()
+	ex = App(200, 200, 1280, 720)
 	sys.exit(app.exec_())
+		

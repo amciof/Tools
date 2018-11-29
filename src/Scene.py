@@ -239,6 +239,9 @@ class Scene:
 
 			self.__drawPolygon(context, info.data, info.model)
 
+			#rework
+			context.drawText(info.model[0][2] - 8, info.model[1][2] - 15, str(idx))
+
 		context.setBrush(restore)
 
 	def __drawRoads(self, context):
