@@ -94,9 +94,8 @@ class Scene:
 		, Base.MARKET  : QColor(  0, 255,   0)
 		, Base.STORAGE : QColor(  0,   0, 255)
 	}
-	ROAD_COLOR = QColor(  0,   0,   0)
-
-	TRAIN_COLOR  = QColor(255,   0, 255)
+	ROAD_COLOR  = QColor(  0,   0,   0)
+	TRAIN_COLOR = QColor(255,   0, 255)
 
 	#special coefs
 	DEFAULT_ZOOM = 0.9
@@ -192,8 +191,7 @@ class Scene:
 	def __initLabelsInfo(self):
 
 		pass
-
-			
+	
 	def __initRoadsVectors(self, roads):
 		self.roadsVecs = {}
 
@@ -242,6 +240,7 @@ class Scene:
 
 		trainMod[0][2] = baseMod[0][2] + coef * roadVec[0]
 		trainMod[1][2] = baseMod[1][2] + coef * roadVec[1]
+
 
 	##render
 	def renderScene(self, context):
@@ -305,7 +304,7 @@ class Scene:
 
 		pass
 
-
+	#primitives draw
 	def __drawPolygon(self, context, data, model):
 		buffer = QPolygonF()
 
