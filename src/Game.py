@@ -12,15 +12,25 @@ import numpy as np
 import json
 
 class Game:
-	
-	EVENT_TIMER       = 1
-	EVENT_MOUSE_PRESS = 2
-	EVENT_PAINT       = 12
+	#events
+	EVENT_TIMER = 1
 
+	EVENT_MOUSE_PRESS   = 2
+	EVENT_MOUSE_RELEASE = 3
+	EVENT_MOUSE_MOVE    = 5
+	EVENT_MOUSE_WHEEL   = 31
+
+	EVENT_PAINT = 12
+
+	#button keys
 	BUTTON_LEFT  = 1
 	BUTTON_RIGHT = 2
 
-	GAME_SLICE = 1000
+	#game consts
+	GAME_TICK  = 10000
+	FRAME_TICK = 16
+
+	WHEEL_SENSITIVITY = 1000
 
 
 	##init section
@@ -60,7 +70,7 @@ class Game:
 		#self.__initPlayer(playerResp)
 
 		##state params
-		self.selectedTrain = None
+		self.__initStateParams()
 
 	def __initParent(self, window):
 
@@ -74,9 +84,7 @@ class Game:
 		self.bases = {}
 
 		for base in jsonMap1['posts']:
-			#can be a fact here
 			idx = base['point_idx']
-
 			if base['type'] == Base.TOWN:
 				self.bases[idx] = Town(base)
 			elif base['type'] == Base.MARKET:
@@ -131,23 +139,36 @@ class Game:
 
 		self.player = Player(jsonPlayer)
 
+	def __initStateParams(self):
+		self.draging = False
+		self.lastX = None
+		self.lastY = None
+
 
 	##logic
 	def start(self):
-
-		self.__startGameSlice()
+		self.gameTickID  = self.window.startTimer(Game.GAME_TICK)
+		self.frameTickID = self.window.startTimer(Game.FRAME_TICK)
 
 	#update
 	def update(self, event):
 		if event.type() == Game.EVENT_MOUSE_PRESS:
 			self.handleMousePress(event)
 
+		elif event.type() == Game.EVENT_MOUSE_RELEASE:
+			self.handleMouseRelease(event)
+
+		elif event.type() == Game.EVENT_MOUSE_MOVE:
+			self.handleMouseMove(event)
+
+		elif event.type() == Game.EVENT_MOUSE_WHEEL:
+			self.handleMouseWheel(event)
+
 		elif event.type() == Game.EVENT_PAINT:
 			self.render()
 
 		elif event.type() == Game.EVENT_TIMER:
 			self.handleTimerEvent(event)
-
 
 	#render
 	def render(self):
@@ -157,167 +178,50 @@ class Game:
 
 		context.end()
 
-
-	#handlers
-	def handleMouseMove(self):
-
-		pass
-
-	def handleMouseRelease(self):
-
-		pass
-
-
+	#mouse
 	def handleMousePress(self, event):
-		if event.button() == Game.BUTTON_RIGHT:
-			print('Turn command from player')
-			self.__turn()
-			return
+		if event.button() == Game.BUTTON_LEFT:
+			self.draging = True
+			self.lastX   = event.x()
+			self.lastY   = event.y()
 
-		winCoords = np.int32([event.x(), event.y()])
+	def handleMouseRelease(self, event):
+		if self.draging:
+			self.draging = False
 
-		if not self.selectedTrain is None:
-			self.__moveTrain(winCoords)
-		else:
-			self.__selectTrain(winCoords)
+	def handleMouseMove(self, event):
+		if self.draging:
+			x = event.x()
+			y = event.y()
+			dx = self.lastX - x
+			dy = self.lastY - y
+			self.lastX = x
+			self.lastY = y
 
-		self.window.update()
+			self.scene.moveCam(dx, dy)
 
-	def __selectTrain(self, winCoords):
-		print('Train not selected')
+	def handleMouseWheel(self, event):
 
-		for idx in self.player.getAllIdx():
-			moved = self.trains[idx].isMoved() 
-			if not moved and self.scene.hitsTrain(idx, winCoords):
-				self.selectedTrain = self.trains[idx]
-				self.scene.setTrainColor(idx, Scene.TRAIN_SELECTED)
-
-				train = self.selectedTrain
-				train.setSpeed(Speed.STOP)
-				resp  = self.net.requestMove(train.road.getIdx(), train.getSpeed(), train.getIdx())
-				print('Result:', resp.result)
-				print('Msg   :', resp.msg)
-				train.printStats()
-
-				self.__offerChoice()
-				break		
-
-	def __moveTrain(self, winCoords):
-		train = self.selectedTrain
-
-		print('Selected train: ', train.getIdx())
-
-		pos    = train.getPosition()
-		road   = train.getRoad()
-		length = road.getLength()
-
-		idx1, idx2 = road.getAdjacentIdx()
-
-		if pos == 0 or pos == length:
-			print('Train in base')
-
-			check = idx1 if pos == 0 else idx2
-
-			for idx, road in self.adjacencyRel[check].items():
-				print('Hit test ', idx)
-				if self.scene.hitsBase(idx, winCoords):
-					print('Success')
-					idx1, idx2 = road.getAdjacentIdx()
-
-					speed = Speed.FORWARD if check == idx1 else Speed.BACKWARD
-
-					print('=Before')
-					train.printStats()
-
-					train.setRoad(road)
-					train.setSpeed(speed)
-					train.move()
-
-					print('=After')
-					train.printStats()
-
-					resp = self.net.requestMove(road.getIdx(), speed, train.getIdx())
-					print('Result:', resp.result)
-					print('Msg   :', resp.msg)
-					break
-		else:
-			print('Train in way')
-
-			hit1 = self.scene.hitsBase(idx1, winCoords)
-			hit2 = self.scene.hitsBase(idx2, winCoords)
-			if hit1 or hit2:
-				speed = Speed.BACKWARD if hit1 else Speed.FORWARD
-
-				print('=Before')
-				train.printStats()
-
-				train.setSpeed(speed)
-				train.move()
-			
-				print('=After')
-				train.printStats()
-
-				road = train.getRoad()
-				resp = self.net.requestMove(road.getIdx(), speed, train.getIdx())
-				print('Result:', resp.result)
-				print('Msg   :', resp.msg)
-			
-		self.scene.updateTrain(train)
-		self.__resetTrain()
-		self.__removeOffered()
-
-	def __resetTrain(self):
-		self.scene.setTrainColor(self.selectedTrain.idx, Scene.TRAIN_DEFAULT)
-		self.selectedTrain = None
-
-
-	def __offerChoice(self):
-
-		pass
-
-	def __removeOffered(self):
-
-		pass
-
-
-	#key handlers
-	def handleKeyPress(self):
-
-		pass
-
-	def handleKeyRelease(self):
-
-		pass
-
+		self.scene.zoomCam(event.angleDelta().y() / Game.WHEEL_SENSITIVITY)
 
 	#timers
 	def handleTimerEvent(self, event):
-		print('-----Timeout-----')
-		self.__turn()
-
-	def __startGameSlice(self):
-
-		self.turnTimerID = self.window.startTimer(Game.GAME_SLICE)
-
-	def __resetGameSlice(self):
-
-		self.window.killTimer(self.turnTimerID)
-		self.__startGameSlice()
+		if event.timerId() == self.gameTickID:
+			self.__turn()
+		elif event.timerId() == self.frameTickID:
+			self.window.update()
 
 
 	def __turn(self):
-		print('turn')
+		print('Game tick')
+		#self.net.requestTurn()
+		#mapLayer1 = self.net.requestMap(Options.LAYER_1)
 
-		self.net.requestTurn()
-		mapLayer1 = self.net.requestMap(Options.LAYER_1)
+		#self.__updateBases(mapLayer1)
+		#self.__updateTrains(mapLayer1)
 
-		self.__updateBases(mapLayer1)
-		self.__updateTrains(mapLayer1)
-
-		self.__resetGameSlice()
-		print('end turn')
-
-		self.window.update()
+		#print('end turn')
+		pass
 
 	def __updateBases(self, mapLayer1):
 		for jsonBase in mapLayer1.msg['posts']:
