@@ -22,7 +22,7 @@ class Game:
 	BUTTON_RIGHT = 2
 
 	# Game Consts
-	GAME_TICK  = 10000
+	GAME_TICK  = 1000
 	FRAME_TICK = 16
 	WHEEL_SENSITIVITY = 1000
 
@@ -35,37 +35,22 @@ class Game:
 		mapResp0   = self.net.requestMap(Options.LAYER_0)
 		mapResp1   = self.net.requestMap(Options.LAYER_1)
 
-		# with open('Examples/Login.txt') as file:
-		# 	playerResp = json.load(file)
-		# with open('Examples/Map0.txt')  as file:
-		# 	mapResp0   = json.load(file)
-		# with open('Examples/Map1.txt')  as file:
-		# 	mapResp1   = json.load(file)
-
 		self.__initBases(mapResp0.msg, mapResp1.msg)
-		# self.__initBases(mapResp0, mapResp1)
 
 		self.__initRoads(mapResp0.msg)
-		# self.__initRoads(mapResp0)
 
 		self.__initAdjacencyRel(mapResp0.msg)
-		# self.__initAdjacencyRel(mapResp0)
 
 		self.__initTrains(playerResp.msg)
-		# self.__initTrains(playerResp)
 
-		# Init Scene
 		self.__initScene()
 		
-		# Player
 		self.__initPlayer(playerResp.msg)
-		# self.__initPlayer(playerResp)
 
-		# State Params
 		self.__initStateParams()
 
-		# Strategy
 		self.__initStrategy()
+
 
 	def __initParent(self, window):
 		self.window = window
