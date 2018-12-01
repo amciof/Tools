@@ -119,7 +119,6 @@ class Scene:
 
 		self.__initTrainsInfo(trains)
 
-	#can be public
 	def __initViewport(self, window):
 		self.w = window.size().width()
 		self.h = window.size().height()
