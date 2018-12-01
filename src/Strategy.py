@@ -39,14 +39,14 @@ class Strategy:
 
 		return self.moves
 
-	def dijkstra(S, adjacencyLists):
+	def dijkstra(self, adjacencyLists):
 		priority_queue = Q.PriorityQueue()
-		priority_queue.put(S, 0)
+		priority_queue.put(self, 0)
 
 		came_from = {}
 		cost_so_far = {}
-		came_from[S] = S
-		cost_so_far[S] = 0
+		came_from[self] = self
+		cost_so_far[self] = 0
 
 		while not priority_queue.empty():
 			current = priority_queue.get()

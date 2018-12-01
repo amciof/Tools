@@ -307,6 +307,7 @@ class Scene:
 
 
 	##render
+	#TODO: much optimizations & rework here possible
 	def renderScene(self, context):
 		self.__drawRoads(context)
 		self.__drawBases(context)

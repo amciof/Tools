@@ -127,7 +127,7 @@ class Game:
 	def start(self):
 		self.gameTickID  = self.window.startTimer(Game.GAME_TICK)
 		self.frameTickID = self.window.startTimer(Game.FRAME_TICK)
-		self.__turn()
+		self._turn()
 
 	# Update
 	def update(self, event):
@@ -182,33 +182,33 @@ class Game:
 	# Timers
 	def handleTimerEvent(self, event):
 		if event.timerId() == self.gameTickID:
-			self.__gameTick()
+			self._gameTick()
 		elif event.timerId() == self.frameTickID:
 			self.window.update()
 
-	def __gameTick(self):
-		self.__turn()
-		self.__updateState()
+	def _gameTick(self):
+		self._turn()
+		self._updateState()
 
-	def __turn(self):
+	def _turn(self):
 		moves = self.strategy.getMoves()
 		for move in moves:
 			self.net.requestMove(move[0], move[1], move[2])
 
-	def __updateState(self):
+	def _updateState(self):
 		self.net.requestTurn()
 		mapLayer1 = self.net.requestMap(Options.LAYER_1)
 
-		self.__updateBases(mapLayer1)
-		self.__updateTrains(mapLayer1)
+		self._updateBases(mapLayer1)
+		self._updateTrains(mapLayer1)
 
-	def __updateBases(self, mapLayer1):
+	def _updateBases(self, mapLayer1):
 		for jsonBase in mapLayer1.msg['posts']:
 			idx = jsonBase['point_idx']
 
 			self.bases[idx].update(jsonBase)
 	
-	def __updateTrains(self, mapLayer1):
+	def _updateTrains(self, mapLayer1):
 		for jsonTrain in mapLayer1.msg['trains']:
 			roadIdx = jsonTrain['line_idx']
 			road    = self.roads[roadIdx]
