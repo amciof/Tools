@@ -144,16 +144,20 @@ class Game:
 		self.lastX = None
 		self.lastY = None
 
-	#strategy
+
+	#strategy here guys
 	def __initStrategy(self):
 		#here init it
+		#self.strategy = Strategy(self) - example
 		pass
+
 
 	##logic
 	def start(self):
 		self.gameTickID  = self.window.startTimer(Game.GAME_TICK)
 		self.frameTickID = self.window.startTimer(Game.FRAME_TICK)
 
+		self.__turn()
 
 
 	#update
@@ -219,14 +223,25 @@ class Game:
 
 
 	def __gameTick(self):
-		print('Game tick')
+		self.__turn()
+		self.__updateState()
+
+
+	#strategy here
+	def __turn(self):
+		#self.strategy.playStrategy()
+		#moves = self.strategy.getMoves()
+		#for move in moves:
+		#	self.net.requestMove(...)
+		pass
+
+
+	def __updateState(self):
 		self.net.requestTurn()
 		mapLayer1 = self.net.requestMap(Options.LAYER_1)
 
 		self.__updateBases(mapLayer1)
 		self.__updateTrains(mapLayer1)
-
-	def __
 
 	def __updateBases(self, mapLayer1):
 		for jsonBase in mapLayer1.msg['posts']:
