@@ -3,6 +3,7 @@ try:
 except ImportError:
 	import queue as Q
 
+import random as rand
 
 class Strategy:
 
@@ -15,19 +16,30 @@ class Strategy:
 		self.moves.clear()
 		for idx, train in self.game.trains.items():
 			position = train.getPosition()
-			road = train.getRoad()
-			if position == road.length:
-				import random as rand
-				start = road.base2.getBaseIdx()
-				keys = list(self.graph.get(start).keys())
-				end = rand.choice(keys)
-				line_idx = self.graph.get(start).get(end).idx
-			else:
-				line_idx = road.idx
-			self.moves.append((line_idx, 1, idx))
+			road     = train.getRoad()
+
+			if position == 0 or position == road.getLength():
+				idx1, idx2 = road.getAdjacentIdx()
+
+				start    = idx1 if position == 0 else idx2
+				adjacent = list(self.graph[start].keys())
+				end      = rand.choice(adjacent)
+				new_road = self.graph[start][end]
+
+				idx1, idx2 = new_road.getAdjacentIdx()
+
+				line_idx = new_road.getIdx()
+				speed    = 1 if start == idx1 else -1
+
+				self.moves.append((line_idx, speed, idx))
+
+			elif train.speed == 0:
+				speed = rand.choice([1, -1])
+				self.moves.append((train.getRoad().getIdx(), speed, idx))
+
 		return self.moves
 
-	def Dijkstra(S, adjacencyLists):
+	def dijkstra(S, adjacencyLists):
 		priority_queue = Q.PriorityQueue()
 		priority_queue.put(S, 0)
 
