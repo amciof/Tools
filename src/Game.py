@@ -144,11 +144,17 @@ class Game:
 		self.lastX = None
 		self.lastY = None
 
+	#strategy
+	def __initStrategy(self):
+		#here init it
+		pass
 
 	##logic
 	def start(self):
 		self.gameTickID  = self.window.startTimer(Game.GAME_TICK)
 		self.frameTickID = self.window.startTimer(Game.FRAME_TICK)
+
+
 
 	#update
 	def update(self, event):
@@ -207,21 +213,20 @@ class Game:
 	#timers
 	def handleTimerEvent(self, event):
 		if event.timerId() == self.gameTickID:
-			self.__turn()
+			self.__gameTick()
 		elif event.timerId() == self.frameTickID:
 			self.window.update()
 
 
-	def __turn(self):
+	def __gameTick(self):
 		print('Game tick')
-		#self.net.requestTurn()
-		#mapLayer1 = self.net.requestMap(Options.LAYER_1)
+		self.net.requestTurn()
+		mapLayer1 = self.net.requestMap(Options.LAYER_1)
 
-		#self.__updateBases(mapLayer1)
-		#self.__updateTrains(mapLayer1)
+		self.__updateBases(mapLayer1)
+		self.__updateTrains(mapLayer1)
 
-		#print('end turn')
-		pass
+	def __
 
 	def __updateBases(self, mapLayer1):
 		for jsonBase in mapLayer1.msg['posts']:
@@ -238,11 +243,11 @@ class Game:
 
 			train = self.trains[idx]
 
-			print('---Before---')
-			train.printStats()
+			#print('---Before---')
+			#train.printStats()
 			train.update(jsonTrain, {'road' : road})
-			print('---After---')
-			train.printStats()
+			#print('---After---')
+			#train.printStats()
 
 			self.scene.updateTrain(train)
 
