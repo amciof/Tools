@@ -1,10 +1,10 @@
 from PyQt5.QtGui  		import QPainter
 
-from src.Networking		import Network, Options
-from src.Scene			import Scene
-from src.SceneElements	import Base, Town, Market, Storage, Road, Speed, Train
-from src.Player			import Player
-from src.Strategy		import Strategy
+from Networking		import Network, Options
+from Scene			import Scene
+from SceneElements	import Base, Town, Market, Storage, Road, Speed, Train
+from Player			import Player
+from Strategy		import Strategy
 
 
 class Game:
