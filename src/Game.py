@@ -4,7 +4,7 @@ from Networking		import Network, Options
 from Scene			import Scene
 from SceneElements	import Base, Town, Market, Storage, Road, Speed, Train
 from Player			import Player
-from Strategy		import RandomStrategy
+from Strategy		import RandomStrategy, PrimitiveStrategy
 
 
 class Game:
@@ -50,6 +50,16 @@ class Game:
 		self.__initStateParams()
 
 		self.__initStrategy()
+
+		#test
+		#dist, pred = self.strategy._dijkstra(self.player.home)
+		#print('Shortest paths from base ', self.player.home)
+		#print('Distances')
+		#for idx, d in dist.items():
+		#	print('Distance to ', idx, ': ', d)
+		#print('Predecessors')
+		#for idx, p in pred.items():
+		#	print('Pred of ', idx, ': ', p)
 
 
 	def __initParent(self, window):
@@ -121,7 +131,7 @@ class Game:
 		self.lastY = None
 
 	def __initStrategy(self):
-		self.strategy = RandomStrategy(self)
+		self.strategy = PrimitiveStrategy(self)
 
 	# Logic
 	def start(self):

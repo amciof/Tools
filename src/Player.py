@@ -8,7 +8,7 @@ class Player:
 
 	##init
 	def __init__(self, jsonLogin):
-		self.home    = jsonLogin['home']['post_idx']
+		self.home    = jsonLogin['home']['idx']
 		self.idx     = jsonLogin['idx']
 		self.inGame  = jsonLogin['in_game']
 		self.name    = jsonLogin['name']

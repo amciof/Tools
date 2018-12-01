@@ -1,17 +1,14 @@
-try:
-	import Queue as Q  # ver. < 3.0
-except ImportError:
-	import queue as Q
 
 from SceneElements import Speed
 
 import random as rand
-import heapq  
+import heapq  as hq
+
 
 class Strategy:
 
 	def __init__(self, game):
-		self.game = game
+		self.game  = game
 		self.graph = game.adjacencyRel
 		self.moves = []
 
@@ -51,33 +48,40 @@ class RandomStrategy(Strategy):
 
 		return self.moves
 
+INT_INF = 2000000000
 
 class PrimitiveStrategy(Strategy):
-
+	
 	def __init__(self, game):
 		Strategy.__init__(self, game)
 
 	def getMoves(self):
 		pass
 
-	def dijkstra(self, adjacencyLists):
-		priority_queue = Q.PriorityQueue()
-		priority_queue.put(self, 0)
+	def _dijkstra(self, start):
+		pqueue = []
+		dist = {}
+		pred = {}
+		for idx in self.graph:
+			dist[idx] = INT_INF
+			pred[idx] = -1
 
-		came_from   = {}
-		cost_so_far = {}
-		came_from[self]   = self
-		cost_so_far[self] = 0
+		dist[start] = 0
+		pred[start] = -1
+		hq.heappush(pqueue, (0, start))
 
-		while not priority_queue.empty():
-			current = priority_queue.get()
+		while len(pqueue) != 0:
+			d, curr = hq.heappop(pqueue)
 
-			for next in range(len(adjacencyLists[current])):
-				new_cost = cost_so_far[current] + adjacencyLists[current][next]
-				if next not in cost_so_far or new_cost < cost_so_far[next]:
-					cost_so_far[next] = new_cost
-					priority = new_cost
-					priority_queue.put(next, priority)
-					came_from[next] = current
+			if dist[curr] < d:
+				continue
 
-		return cost_so_far, came_from
+			for to, edge in self.graph[curr].items():
+				newDist = dist[curr] + edge.length
+				if newDist < dist[to]:
+					dist[to] = newDist
+					pred[to] = curr
+					hq.heappush(pqueue, (dist[to], to))
+
+		return dist, pred
+
