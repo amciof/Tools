@@ -1,40 +1,31 @@
-import json
+from PyQt5.QtGui  		import QPainter
 
-import numpy as np
-
-from PyQt5.QtGui  import QPainter
-from PyQt5.QtCore import QTimer
-
-from Networking import Network, Action, Options
-from Scene         import Scene
-from SceneElements import Base, Town, Market, Storage, Road, Speed, Train
-from Player     import Player
-from Strategy import Strategy
+from src.Networking		import Network, Options
+from src.Scene			import Scene
+from src.SceneElements	import Base, Town, Market, Storage, Road, Speed, Train
+from src.Player			import Player
+from src.Strategy		import Strategy
 
 
 class Game:
-	#events
-	EVENT_TIMER = 1
 
+	# Event Consts
+	EVENT_TIMER 		= 1
 	EVENT_MOUSE_PRESS   = 2
 	EVENT_MOUSE_RELEASE = 3
 	EVENT_MOUSE_MOVE    = 5
 	EVENT_MOUSE_WHEEL   = 31
+	EVENT_PAINT 		= 12
 
-	EVENT_PAINT = 12
-
-	#button keys
+	# Button Keys
 	BUTTON_LEFT  = 1
 	BUTTON_RIGHT = 2
 
-	#game consts
+	# Game Consts
 	GAME_TICK  = 10000
 	FRAME_TICK = 16
-
 	WHEEL_SENSITIVITY = 1000
 
-
-	##init section
 	def __init__(self, serverAddr, portNum, playerName, window):
 		self.__initParent(window)
 
@@ -44,44 +35,42 @@ class Game:
 		mapResp0   = self.net.requestMap(Options.LAYER_0)
 		mapResp1   = self.net.requestMap(Options.LAYER_1)
 
-		#with open('Examples/Login.txt') as file:
-		#	playerResp = json.load(file)
-		#with open('Examples/Map0.txt')  as file:
-		#	mapResp0   = json.load(file)
-		#with open('Examples/Map1.txt')  as file:
-		#	mapResp1   = json.load(file)
+		# with open('Examples/Login.txt') as file:
+		# 	playerResp = json.load(file)
+		# with open('Examples/Map0.txt')  as file:
+		# 	mapResp0   = json.load(file)
+		# with open('Examples/Map1.txt')  as file:
+		# 	mapResp1   = json.load(file)
 
 		self.__initBases(mapResp0.msg, mapResp1.msg)
-		#self.__initBases(mapResp0, mapResp1)
+		# self.__initBases(mapResp0, mapResp1)
 
 		self.__initRoads(mapResp0.msg)
-		#self.__initRoads(mapResp0)
+		# self.__initRoads(mapResp0)
 
 		self.__initAdjacencyRel(mapResp0.msg)
-		#self.__initAdjacencyRel(mapResp0)
+		# self.__initAdjacencyRel(mapResp0)
 
 		self.__initTrains(playerResp.msg)
-		#self.__initTrains(playerResp)
+		# self.__initTrains(playerResp)
 
-		##---init scene---
+		# Init Scene
 		self.__initScene()
 		
-		##player
+		# Player
 		self.__initPlayer(playerResp.msg)
-		#self.__initPlayer(playerResp)
+		# self.__initPlayer(playerResp)
 
-		##state params
+		# State Params
 		self.__initStateParams()
 
-		## STRATEGY
+		# Strategy
 		self.__initStrategy()
 
 	def __initParent(self, window):
-
 		self.window = window
 
 	def __initNetwork(self, serverAddr, portNum):
-
 		self.net = Network(serverAddr, portNum)
 
 	def __initBases(self, jsonMap0, jsonMap1):
@@ -131,7 +120,6 @@ class Game:
 			self.trains[idx] = Train(jsonTrain, self.roads[roadIdx])
 
 	def __initScene(self):
-		
 		self.scene = Scene(
 			self.bases
 			, self.roads
@@ -140,7 +128,6 @@ class Game:
 		)
 
 	def __initPlayer(self, jsonPlayer):
-
 		self.player = Player(jsonPlayer)
 
 	def __initStateParams(self):
@@ -148,18 +135,16 @@ class Game:
 		self.lastX = None
 		self.lastY = None
 
-	# strategy here guys
 	def __initStrategy(self):
 		self.strategy = Strategy(self)
 
-	# logic
+	# Logic
 	def start(self):
 		self.gameTickID  = self.window.startTimer(Game.GAME_TICK)
 		self.frameTickID = self.window.startTimer(Game.FRAME_TICK)
-
 		self.__turn()
 
-	# update
+	# Update
 	def update(self, event):
 		if event.type() == Game.EVENT_MOUSE_PRESS:
 			self.handleMousePress(event)
@@ -179,15 +164,13 @@ class Game:
 		elif event.type() == Game.EVENT_TIMER:
 			self.handleTimerEvent(event)
 
-	# render
+	# Render
 	def render(self):
 		context = QPainter(self.window)
-
 		self.scene.renderScene(context)
-
 		context.end()
 
-	# mouse
+	# Mouse
 	def handleMousePress(self, event):
 		if event.button() == Game.BUTTON_LEFT:
 			self.draging = True
@@ -206,14 +189,12 @@ class Game:
 			dy = self.lastY - y
 			self.lastX = x
 			self.lastY = y
-
 			self.scene.moveCam(dx, dy)
 
 	def handleMouseWheel(self, event):
-
 		self.scene.zoomCam(event.angleDelta().y() / Game.WHEEL_SENSITIVITY)
 
-	# timers
+	# Timers
 	def handleTimerEvent(self, event):
 		if event.timerId() == self.gameTickID:
 			self.__gameTick()
@@ -224,16 +205,10 @@ class Game:
 		self.__turn()
 		self.__updateState()
 
-	# strategy here
 	def __turn(self):
-		self.strategy.playStrategy()
-
-		for (idx, train) in self.trains.items():
-			position = train.getPosition()
-			print("POSITION " + str(position))
-			print(self.adjacencyRel.get(position))
-
-			self.net.requestMove(train.getRoad().getIdx(), 1, idx)
+		moves = self.strategy.getMoves()
+		for move in moves:
+			self.net.requestMove(move[0], move[1], move[2])
 
 	def __updateState(self):
 		self.net.requestTurn()
@@ -257,12 +232,12 @@ class Game:
 
 			train = self.trains[idx]
 
-			#print('---Before---')
-			#train.printStats()
+			# print('---Before---')
+			# train.printStats()
+
 			train.update(jsonTrain, {'road' : road})
-			#print('---After---')
-			#train.printStats()
+
+			# print('---After---')
+			# train.printStats()
 
 			self.scene.updateTrain(train)
-
-			

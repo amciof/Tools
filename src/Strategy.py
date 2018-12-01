@@ -10,9 +10,8 @@ class Strategy:
 		self.game = game
 		self.graph = game.adjacencyRel
 		self.moves = []
-		pass
 
-	def playStrategy(self):
+	def getMoves(self):
 		self.moves.clear()
 		for idx, train in self.game.trains.items():
 			position = train.getPosition()
@@ -26,8 +25,6 @@ class Strategy:
 			else:
 				line_idx = road.idx
 			self.moves.append((line_idx, 1, idx))
-
-	def getMoves(self):
 		return self.moves
 
 	def Dijkstra(S, adjacencyLists):
