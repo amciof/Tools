@@ -4,7 +4,7 @@ from Networking		import Network, Options
 from Scene			import Scene
 from SceneElements	import Base, Town, Market, Storage, Road, Speed, Train
 from Player			import Player
-from Strategy		import Strategy
+from Strategy		import RandomStrategy
 
 
 class Game:
@@ -121,13 +121,13 @@ class Game:
 		self.lastY = None
 
 	def __initStrategy(self):
-		self.strategy = Strategy(self)
+		self.strategy = RandomStrategy(self)
 
 	# Logic
 	def start(self):
 		self.gameTickID  = self.window.startTimer(Game.GAME_TICK)
 		self.frameTickID = self.window.startTimer(Game.FRAME_TICK)
-		self._turn()
+		#self._turn()
 
 	# Update
 	def update(self, event):
@@ -187,8 +187,9 @@ class Game:
 			self.window.update()
 
 	def _gameTick(self):
-		self._turn()
-		self._updateState()
+		#self._turn()
+		#self._updateState()
+		pass
 
 	def _turn(self):
 		moves = self.strategy.getMoves()

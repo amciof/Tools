@@ -75,9 +75,10 @@ def cameraMat(x, y):
 class RenderInfo:
 
 	def __init__(self, data, model, color):
-		self.data  = data
-		self.model = model
-		self.color = color
+		self.data   = data
+		self.model  = model
+		self.color  = color
+		self.buffer = None
 
 
 class Scene:

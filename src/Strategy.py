@@ -3,7 +3,10 @@ try:
 except ImportError:
 	import queue as Q
 
+from SceneElements import Speed
+
 import random as rand
+import heapq  
 
 class Strategy:
 
@@ -11,6 +14,15 @@ class Strategy:
 		self.game = game
 		self.graph = game.adjacencyRel
 		self.moves = []
+
+	def getMoves(self):
+		pass
+
+
+class RandomStrategy(Strategy):
+
+	def __init__(self, game):
+		Strategy.__init__(self, game)
 
 	def getMoves(self):
 		self.moves.clear()
@@ -29,23 +41,32 @@ class Strategy:
 				idx1, idx2 = new_road.getAdjacentIdx()
 
 				line_idx = new_road.getIdx()
-				speed    = 1 if start == idx1 else -1
+				speed    = Speed.FORWARD if start == idx1 else Speed.BACKWARD
 
 				self.moves.append((line_idx, speed, idx))
 
 			elif train.speed == 0:
-				speed = rand.choice([1, -1])
+				speed = rand.choice([Speed.FORWARD, Speed.BACKWARD])
 				self.moves.append((train.getRoad().getIdx(), speed, idx))
 
 		return self.moves
+
+
+class PrimitiveStrategy(Strategy):
+
+	def __init__(self, game):
+		Strategy.__init__(self, game)
+
+	def getMoves(self):
+		pass
 
 	def dijkstra(self, adjacencyLists):
 		priority_queue = Q.PriorityQueue()
 		priority_queue.put(self, 0)
 
-		came_from = {}
+		came_from   = {}
 		cost_so_far = {}
-		came_from[self] = self
+		came_from[self]   = self
 		cost_so_far[self] = 0
 
 		while not priority_queue.empty():
