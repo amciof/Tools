@@ -1,27 +1,34 @@
 try:
-    import Queue as Q  # ver. < 3.0
+	import Queue as Q  # ver. < 3.0
 except ImportError:
-    import queue as Q
+	import queue as Q
 
 
 class Strategy:
 
 	def __init__(self, game):
-		#do whatever initialization you need
-
-		#self.game  = game - ref to game
-		#self.moves = []   - sequence of moves
-		#and other inits
+		self.game = game
+		self.graph = game.adjacencyRel
+		self.moves = []
 		pass
 
 	def playStrategy(self):
-		#calculate the moves
-		#and create self.moves list
-		pass
+		self.moves.clear()
+		for idx, train in self.game.trains.items():
+			position = train.getPosition()
+			road = train.getRoad()
+			if position == road.length:
+				import random as rand
+				start = road.base2.getBaseIdx()
+				keys = list(self.graph.get(start).keys())
+				end = rand.choice(keys)
+				line_idx = self.graph.get(start).get(end).idx
+			else:
+				line_idx = road.idx
+			self.moves.append((line_idx, 1, idx))
 
 	def getMoves(self):
-		#return self.moves
-		pass
+		return self.moves
 
 	def Dijkstra(S, adjacencyLists):
 		priority_queue = Q.PriorityQueue()
@@ -43,4 +50,4 @@ class Strategy:
 					priority_queue.put(next, priority)
 					came_from[next] = current
 
-		return cost_so_far,came_from
+		return cost_so_far, came_from

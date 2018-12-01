@@ -1,15 +1,16 @@
+import json
 
-from Networking import Network, Action, Options
-from Scene         import Scene
-from SceneElements import Base, Town, Market, Storage, Road, Speed, Train
-from Player     import Player
+import numpy as np
 
 from PyQt5.QtGui  import QPainter
 from PyQt5.QtCore import QTimer
 
-import numpy as np
+from src.Networking import Network, Action, Options
+from src.Scene         import Scene
+from src.SceneElements import Base, Town, Market, Storage, Road, Speed, Train
+from src.Player     import Player
+from src.Strategy import Strategy
 
-import json
 
 class Game:
 	#events
@@ -71,6 +72,9 @@ class Game:
 
 		##state params
 		self.__initStateParams()
+
+		## STRATEGY
+		self.__initStrategy()
 
 	def __initParent(self, window):
 
@@ -144,23 +148,18 @@ class Game:
 		self.lastX = None
 		self.lastY = None
 
-
-	#strategy here guys
+	# strategy here guys
 	def __initStrategy(self):
-		#here init it
-		#self.strategy = Strategy(self) - example
-		pass
+		self.strategy = Strategy(self)
 
-
-	##logic
+	# logic
 	def start(self):
 		self.gameTickID  = self.window.startTimer(Game.GAME_TICK)
 		self.frameTickID = self.window.startTimer(Game.FRAME_TICK)
 
 		self.__turn()
 
-
-	#update
+	# update
 	def update(self, event):
 		if event.type() == Game.EVENT_MOUSE_PRESS:
 			self.handleMousePress(event)
@@ -180,7 +179,7 @@ class Game:
 		elif event.type() == Game.EVENT_TIMER:
 			self.handleTimerEvent(event)
 
-	#render
+	# render
 	def render(self):
 		context = QPainter(self.window)
 
@@ -188,7 +187,7 @@ class Game:
 
 		context.end()
 
-	#mouse
+	# mouse
 	def handleMousePress(self, event):
 		if event.button() == Game.BUTTON_LEFT:
 			self.draging = True
@@ -214,27 +213,27 @@ class Game:
 
 		self.scene.zoomCam(event.angleDelta().y() / Game.WHEEL_SENSITIVITY)
 
-	#timers
+	# timers
 	def handleTimerEvent(self, event):
 		if event.timerId() == self.gameTickID:
 			self.__gameTick()
 		elif event.timerId() == self.frameTickID:
 			self.window.update()
 
-
 	def __gameTick(self):
 		self.__turn()
 		self.__updateState()
 
-
-	#strategy here
+	# strategy here
 	def __turn(self):
-		#self.strategy.playStrategy()
-		#moves = self.strategy.getMoves()
-		#for move in moves:
-		#	self.net.requestMove(...)
-		pass
+		self.strategy.playStrategy()
 
+		for (idx, train) in self.trains.items():
+			position = train.getPosition()
+			print("POSITION " + str(position))
+			print(self.adjacencyRel.get(position))
+
+			self.net.requestMove(train.getRoad().getIdx(), 1, idx)
 
 	def __updateState(self):
 		self.net.requestTurn()

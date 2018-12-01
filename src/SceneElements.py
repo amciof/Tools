@@ -1,8 +1,7 @@
-
 from PyQt5.QtGui  import QPainter, QColor, QPen, QBrush, QPolygonF
 from PyQt5.QtCore import QPointF
 
-#bases
+
 class Base:
 
 	BASE    = 0
@@ -17,8 +16,6 @@ class Base:
 		self.baseIdx  = idx
 		self.name     = name
 
-
-	#useless get/set
 	def getType(self):
 
 		return self.baseType
@@ -54,14 +51,14 @@ class Town(Base):
 		self.populationCapacity = jsonTown['population_capacity'] # +
 		self.population         = jsonTown['population']          # +
 
-		#self.nextPrice     = jsonTown['next_level_price'] # -
-		#self.trainCooldown = jsonTown['train_cooldown']   # -
-		#self.level         = jsonTown['level']            # -
+		# self.nextPrice     = jsonTown['next_level_price'] # -
+		# self.trainCooldown = jsonTown['train_cooldown']   # -
+		# self.level         = jsonTown['level']            # -
 
 		self.playerIdx = jsonTown['player_idx'] # -
 
 
-	#useless get/set
+	# useless get/set
 	def getPlayerIdx(self):
 
 		return self.playerIdx
@@ -79,7 +76,7 @@ class Town(Base):
 		return self.product
 
 
-	#logic
+	# logic
 	def update(self, jsonUpdate):
 
 		self.product            = jsonUpdate['product']
@@ -91,37 +88,12 @@ class Town(Base):
 
 		pass
 
-
 	def upgrade(self):
 
 		pass
 
-	#?????
-	def storeSupply(self, amount, supplyType):
-		if supplyType == Supply.ARMOR:
-			available = self.armorCapacity - self.armor
-
-			if amount <= available:
-				self.armor += amount
-				return True, 0
-			else:
-				self.armor += available
-				return True, amount - available
-
-		elif supplyType == Supply.PRODUCT:
-			available = self.productCapacity - self.product
-
-			if amount <= available:
-				self.product += amount
-				return True, 0
-			else:
-				self.product += available
-				return True, amount - available
-
-		return False, amount
-
 	def withdrawArmor(self, amount):
-		#for train upgrades
+		# for train upgrades
 		if self.armor >= amount:
 			self.armor -= amount
 			return True
@@ -190,8 +162,6 @@ class Storage(Base):
 		return False
 
 
-
-#road
 class Road:
 
 	def __init__(self, jsonLine, base1, base2):
@@ -199,32 +169,25 @@ class Road:
 		self.length = jsonLine['length']
 		self.base1  = base1
 		self.base2  = base2
-		
 
 	def getAdjacent(self):
-
 		return self.base1, self.base2
 
 	def getAdjacentIdx(self):
-
 		return self.base1.getBaseIdx(), self.base2.getBaseIdx()
 
-
 	def getLength(self):
-
 		return self.length
 
-
 	def getIdx(self):
-
 		return self.idx
 
 
-#i like trains
 class Speed:
 	STOP     = +0
 	FORWARD  = +1
 	BACKWARD = -1
+
 
 class Train:
 
@@ -233,44 +196,35 @@ class Train:
 		self.goodsType     = jsonTrain['goods_type']     # -
 		self.goods         = jsonTrain['goods']          # -
 
-		#self.fuelConsumption = jsonTrain['fuel_consumption'] # -
-		#self.fuelCapacity    = jsonTrain['fuel_capacity']    # -
-		#self.fuel            = jsonTrain['fuel']             # -
+		# self.fuelConsumption = jsonTrain['fuel_consumption'] # -
+		# self.fuelCapacity    = jsonTrain['fuel_capacity']    # -
+		# self.fuel            = jsonTrain['fuel']             # -
 
-		#self.level     = jsonTrain['level']            # -
-		#self.nextPrice = jsonTrain['next_level_price'] # -
+		# self.level     = jsonTrain['level']            # -
+		# self.nextPrice = jsonTrain['next_level_price'] # -
 
 		self.playerIdx = jsonTrain['player_idx'] # +
 		self.idx       = jsonTrain['idx']        # +
 
-		#self.cooldown = jsonTrain['cooldown'] # -
+		# self.cooldown = jsonTrain['cooldown'] # -
 		self.position = jsonTrain['position'] # +
 		self.speed    = jsonTrain['speed']    # +
 
 		self.road  = road  # +
 		self.moved = False # +
 
-	
-	#get/set
 	def getPlayerIdx(self):
-
 		return self.playerIdx
 
-
 	def getIdx(self):
-
 		return self.idx
 
-
 	def setSpeed(self, speed):
-
 		self.speed = speed
 
 	def getSpeed(self):
-
 		return self.speed
 
-	
 	def setRoad(self, newRoad):
 		old = self.road
 		pos = self.position
@@ -282,8 +236,8 @@ class Train:
 
 			idx1, idx2 = newRoad.getAdjacentIdx()
 			if curr == idx1:
-			   self.position = 0
-			   self.road     = newRoad
+				self.position = 0
+				self.road     = newRoad
 			elif curr == idx2:
 				self.position = newRoad.getLength()
 				self.road     = newRoad
@@ -291,22 +245,15 @@ class Train:
 			self.speed = 0
 
 	def getRoad(self):
-
 		return self.road
 
-
 	def getPosition(self):
-
 		return self.position
 
-	
-	#logic
 	def isMoved(self):
-
 		return self.moved
 
 	def reset(self):
-
 		self.moved = False
 
 	def move(self):
@@ -326,16 +273,11 @@ class Train:
 			self.position = newPos
 			self.moved    = True
 
-
 	def upgrade(self):
-
 		pass
 
-
 	def onCooldown(self):
-
 		return self.cooldown == 0
-
 
 	def update(self, jsonUpdate, additional):
 		self.goods         = jsonUpdate['goods']
@@ -355,4 +297,3 @@ class Train:
 		print('Road    : ', self.road.getIdx())
 		print('Length  : ', self.road.getLength())
 		print('UV      : ', self.road.getAdjacentIdx())
-
