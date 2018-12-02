@@ -221,7 +221,7 @@ class PrimitiveStrategy(Strategy):
 		# returning, doing nothing or going to closest vertex
 		self.trainState = {}
 		for idx, train in self.game.trains.items():
-			self.trainState[idx] = State(self.allPath[25][29], train)
+			self.trainState[idx] = State(self.allPath[25][33], train)
 
 	def __cacheAllPaths(self):
 		self.allPath = {}

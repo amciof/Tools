@@ -1,5 +1,9 @@
 from PyQt5.QtGui  		import QPainter
 
+from PyQt5.QtWidgets import QApplication, QWidget, QMainWindow, QLabel
+from PyQt5.QtGui     import QIcon, QPainter, QColor, QBrush
+from PyQt5.QtCore    import Qt
+
 from Networking		import Network, Options
 from Scene			import Scene
 from SceneElements	import Base, Town, Market, Storage, Road, Speed, Train
@@ -7,7 +11,7 @@ from Player			import Player
 from Strategy		import RandomStrategy, PrimitiveStrategy
 
 
-class Game:
+class Game(QWidget):
 
 	# Event Consts
 	EVENT_TIMER 		= 1
@@ -26,8 +30,10 @@ class Game:
 	FRAME_TICK = 16
 	WHEEL_SENSITIVITY = 1000
 
+
+	#init methods
 	def __init__(self, serverAddr, portNum, playerName, window):
-		self.__initParent(window)
+		self.__initWindow(window)
 
 		self.__initNetwork(serverAddr, portNum)
 
@@ -51,11 +57,15 @@ class Game:
 
 		self.__initStrategy(mapResp1.msg)
 
+	def __initWindow(self, window):
+		QWidget.__init__(self, window)
 
-	def __initParent(self, window):
-		self.window = window
+		self.setGeometry(0, 0, window.size().width(), window.size().height())
+
+		self.show()
 
 	def __initNetwork(self, serverAddr, portNum):
+
 		self.net = Network(serverAddr, portNum)
 
 	def __initBases(self, jsonMap0, jsonMap1):
@@ -109,10 +119,11 @@ class Game:
 			self.bases
 			, self.roads
 			, self.trains
-			, self.window
+			, (self.size().width(), self.size().height())
 		)
 
 	def __initPlayer(self, jsonPlayer):
+
 		self.player = Player(jsonPlayer)
 
 	def __initStateParams(self):
@@ -131,50 +142,32 @@ class Game:
 
 		self.strategy = PrimitiveStrategy(self, self.player.home, markets)
 
-	# Logic
+
+	#logic
 	def start(self):
-		self.gameTickID  = self.window.startTimer(Game.GAME_TICK)
-		self.frameTickID = self.window.startTimer(Game.FRAME_TICK)
+		self.gameTickID  = self.startTimer(Game.GAME_TICK)
+		self.frameTickID = self.startTimer(Game.FRAME_TICK)
 		self._turn()
 
-	# Update
-	def update(self, event):
-		if event.type() == Game.EVENT_MOUSE_PRESS:
-			self.handleMousePress(event)
 
-		elif event.type() == Game.EVENT_MOUSE_RELEASE:
-			self.handleMouseRelease(event)
-
-		elif event.type() == Game.EVENT_MOUSE_MOVE:
-			self.handleMouseMove(event)
-
-		elif event.type() == Game.EVENT_MOUSE_WHEEL:
-			self.handleMouseWheel(event)
-
-		elif event.type() == Game.EVENT_PAINT:
-			self.render()
-
-		elif event.type() == Game.EVENT_TIMER:
-			self.handleTimerEvent(event)
-
-	# Render
-	def render(self):
-		context = QPainter(self.window)
+	#events
+	def paintEvent(self, event):
+		context = QPainter(self)
 		self.scene.renderScene(context)
 		context.end()
 
-	# Mouse
-	def handleMousePress(self, event):
+
+	def mousePressEvent(self, event):
 		if event.button() == Game.BUTTON_LEFT:
 			self.draging = True
 			self.lastX   = event.x()
 			self.lastY   = event.y()
 
-	def handleMouseRelease(self, event):
+	def mouseReleaseEvent(self, event):
 		if self.draging:
 			self.draging = False
 
-	def handleMouseMove(self, event):
+	def mouseMoveEvent(self, event):
 		if self.draging:
 			x = event.x()
 			y = event.y()
@@ -184,16 +177,19 @@ class Game:
 			self.lastY = y
 			self.scene.moveCam(dx, dy)
 
-	def handleMouseWheel(self, event):
+	def mouseWheelEvent(self, event):
+
 		self.scene.zoomCam(event.angleDelta().y() / Game.WHEEL_SENSITIVITY)
 
-	# Timers
-	def handleTimerEvent(self, event):
+
+	def timerEvent(self, event):
 		if event.timerId() == self.gameTickID:
 			self._gameTick()
 		elif event.timerId() == self.frameTickID:
-			self.window.update()
+			self.update()
 
+
+	#inner methods
 	def _gameTick(self):
 		self._turn()
 		self._updateState()

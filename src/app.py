@@ -9,7 +9,7 @@ from Game import Game
 
 SERVER_ADDR = 'wgforge-srv.wargaming.net'
 SERVER_PORT = 443
-PLAYER = 'Eto transliteraciya'
+PLAYER = 'A.D.'
 
 
 class App(QMainWindow):
@@ -17,27 +17,20 @@ class App(QMainWindow):
 	def __init__(self, startX, startY, width, height):
 		super().__init__()
 
-		self.title = 'WG KRUTA'
+		self.title = 'WG'
 
 		self.setGeometry(startX, startY, width, height)
+		self.setFixedSize(width, height)
+		self.setWindowTitle(self.title)
 
 		self.game = Game(SERVER_ADDR, SERVER_PORT, PLAYER, self)
 		self.game.start()
-
-		self.setFixedSize(width, height)
-		self.setWindowTitle(self.title)
 
 		self.show()
 
 
 	def initUI(self):
 		pass
-
-
-	def event(self, event):
-		self.game.update(event)
-
-		return QMainWindow.event(self, event)
 
 
 if __name__ == '__main__':

@@ -133,8 +133,8 @@ class Scene:
 
 
 	##init
-	def __init__(self, bases, roads, trains, window):
-		self.__initViewport(window)
+	def __init__(self, bases, roads, trains, viewport):
+		self.__initViewport(viewport)
 		self.__initCameraComp()
 
 		self.__initBasesInfo(bases, roads)
@@ -148,9 +148,9 @@ class Scene:
 		self.__initRoadsLabelsInfo(roads)
 
 
-	def __initViewport(self, window):
-		self.w = window.size().width()
-		self.h = window.size().height()
+	def __initViewport(self, viewport):
+		self.w = viewport[0]
+		self.h = viewport[1]
 
 	def __initCameraComp(self):
 		self.zoom = Scene.DEFAULT_ZOOM
