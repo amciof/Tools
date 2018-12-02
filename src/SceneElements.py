@@ -1,13 +1,13 @@
-from PyQt5.QtGui  import QPainter, QColor, QPen, QBrush, QPolygonF
-from PyQt5.QtCore import QPointF
 
-
-class Base:
-
+#bases
+class BaseConsts:
 	BASE    = 0
 	TOWN    = 1
 	MARKET  = 2
 	STORAGE = 3
+
+#base Base class
+class Base:
 
 	def __init__(self, name, idx, baseType):
 		self.events = []
@@ -24,7 +24,6 @@ class Base:
 
 		return self.baseIdx
 
-
 	#logic
 	def update(self):
 
@@ -34,11 +33,11 @@ class Base:
 
 		pass
 
-
+#Base subclasses
 class Town(Base):
 
 	def __init__(self, jsonTown):
-		Base.__init__(self, jsonTown['name'], jsonTown['point_idx'], Base.TOWN)
+		Base.__init__(self, jsonTown['name'], jsonTown['point_idx'], BaseConsts.TOWN)
 
 		self.idx = jsonTown['idx'] # +
 
@@ -75,8 +74,7 @@ class Town(Base):
 
 		return self.product
 
-
-	# logic
+	#logic
 	def update(self, jsonUpdate):
 
 		self.product            = jsonUpdate['product']
@@ -92,7 +90,6 @@ class Town(Base):
 
 		pass
 
-
 class Market(Base):
 
 	def __init__(self, jsonMarket):
@@ -100,7 +97,7 @@ class Market(Base):
 			self
 			, jsonMarket['name']
 			, jsonMarket['point_idx']
-			, Base.MARKET
+			, BaseConsts.MARKET
 		)
 
 		self.product         = jsonMarket['product']          # +
@@ -112,7 +109,6 @@ class Market(Base):
 		self.product         = jsonUpdate['product']
 		self.productCapacity = jsonUpdate['product_capacity']
 
-
 class Storage(Base):
 
 	def __init__(self, jsonStorage):
@@ -120,7 +116,7 @@ class Storage(Base):
 			self
 			, jsonStorage['name']
 			, jsonStorage['point_idx']
-			, Base.STORAGE
+			, BaseConsts.STORAGE
 		)
 
 		self.armor         = jsonStorage['armor']          # +
@@ -132,6 +128,7 @@ class Storage(Base):
 		pass
 
 
+#rock 'n' roll
 class Road:
 
 	def __init__(self, jsonLine, base1, base2):
@@ -152,12 +149,10 @@ class Road:
 	def getIdx(self):
 		return self.idx
 
-
 class Speed:
 	STOP     = +0
 	FORWARD  = +1
 	BACKWARD = -1
-
 
 class Train:
 
@@ -202,7 +197,6 @@ class Train:
 
 	def onCooldown(self):
 		return self.cooldown == 0
-
 
 	def full(self):
 		return self.goods == self.goodsCapacity

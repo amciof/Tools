@@ -4,7 +4,7 @@ from SceneElements import Speed
 import random as rand
 import heapq  as hq
 
-
+#base class for strategies
 class Strategy:
 
 	def __init__(self, game):
@@ -16,6 +16,7 @@ class Strategy:
 		pass
 
 
+#really primitive random choose strategy
 class RandomStrategy(Strategy):
 
 	def __init__(self, game):
@@ -49,12 +50,16 @@ class RandomStrategy(Strategy):
 		return self.moves
 
 
+#Shortest path strategy(dijkstra alg)
+#TODO: rework this shit
 class Path:
 	#start  -> path start
 	#end    -> path end
 	#edgesDict -> dict of tuples(i_list, edge, speed)
 	#edgesList -> list of tuples(edge, speed)
 	#length -> path length
+
+	#don't touch that
 	def __init__(self, start, end):
 		self.start  = start
 		self.end    = end
@@ -63,17 +68,27 @@ class Path:
 		self.edgesDict = {}
 		self.edgesList = []
 
-class State:
-	INVALID    = -1
-	IDLE       = 0
-	COLLECTING = 1
-	RETURNING  = 2
-	CORRECTING = 3
+class TrainState:
+	#Cant't move(in fact train is stopped)
+	IDLE = 0
 
-	def __init__(self, path, train):
+	#On the way to resources
+	COLLECTING = 1
+
+	#Resource collected. Returning to base
+	RETURNING = 2
+
+	#Stupid fucking WG server lagged so train is off the path.
+	#So we need to chose what adjacent base to return(from which path is shorter)
+	CORRECTING = 3 
+
+#TODO: rework this
+class TrainManager:
+	
+	def __init__(self, strategy, path, train):
 		#TODO - total rework
 		self.train = train
-		self.state = State.COLLECTING
+		self.state = TrainState.COLLECTING
 		self.path  = path
 		self.curr  = 0
 
@@ -83,13 +98,13 @@ class State:
 
 
 	def getMove(self):
-		if self.state == State.IDLE:
+		if self.state == TrainState.IDLE:
 			return self.__caseIDLE()
 
-		elif self.state == State.COLLECTING:
+		elif self.state == TrainState.COLLECTING:
 			return self.__caseCOLLECTING()
 
-		elif self.state == State.RETURNING:
+		elif self.state == TrainState.RETURNING:
 			return self.__caseRETURNING()
 
 	def __caseIDLE(self):
@@ -104,7 +119,7 @@ class State:
 
 		if self.train.full():
 			print('--Train is full. Returning to base--')
-			self.state    = State.RETURNING
+			self.state    = TrainState.RETURNING
 			self.edgePos -= currSpeed
 
 			#move
@@ -119,7 +134,7 @@ class State:
 
 				if self.curr >= len(self.path.edgesList):
 					print('-End of path. Returning to base-')
-					self.state = State.RETURNING
+					self.state = TrainState.RETURNING
 					self.curr  = len(self.path.edgesList) - 1
 
 					nextEdge, nextSpeed = self.path.edgesList[self.curr]
@@ -160,7 +175,7 @@ class State:
 
 			if self.curr < 0:
 				print('-Returned. Start collecting.-')
-				self.state = State.COLLECTING
+				self.state = TrainState.COLLECTING
 				self.curr  = 0
 
 				nextEdge, nextSpeed = self.path.edgesList[self.curr]
@@ -204,8 +219,9 @@ class State:
 		if not (currRoad.getIdx() == road.getIdx() \
 			and self.edgePos == pos \
 			and currSpeed == speed):
-			self.state = State.INVALID
+			self.state = TrainManager.INVALID
 
+#estimates best moves
 class PrimitiveStrategy(Strategy):
 	
 	def __init__(self, game, town, markets):
@@ -217,15 +233,15 @@ class PrimitiveStrategy(Strategy):
 		#cache all shortest paths
 		self.__cacheAllPaths()
 
-		#state of the trains whether they collecting,
-		# returning, doing nothing or going to closest vertex
 		self.trainState = {}
 		for idx, train in self.game.trains.items():
-			self.trainState[idx] = State(self.allPath[25][33], train)
+			self.trainState[idx] = TrainManager(self, self.allPath[25][33], train)
 
+	#probably unnesessary
 	def __cacheAllPaths(self):
 		self.allPath = {}
 
+		#TODO: rework
 		allIdx = list(self.game.bases.keys())
 		for i, start in enumerate(allIdx):
 			dist, pred = self.__dijkstra(start)
@@ -236,6 +252,7 @@ class PrimitiveStrategy(Strategy):
 			for end, path in paths.items():
 				self.allPath[start][end] = path
 
+	#probably unnesessary
 	def __restorePaths(self, start, pred):
 		paths = {}
 		
@@ -268,6 +285,11 @@ class PrimitiveStrategy(Strategy):
 
 		return paths
 
+	5
+	#TODO: improve
+	#multiple resources now
+	#need to find shortest path ignoring bases of other resource type
+	#(we don't want to obtain this resource)
 	def __dijkstra(self, start):
 		INT_INF = 2000000000
 
@@ -298,7 +320,7 @@ class PrimitiveStrategy(Strategy):
 		return dist, pred
 
 
-	##logic
+	#logic
 	def getMoves(self):
 		self.moves = []
 		

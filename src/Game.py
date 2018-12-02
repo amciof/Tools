@@ -6,7 +6,7 @@ from PyQt5.QtCore    import Qt
 
 from Networking		import Network, Options
 from Scene			import Scene
-from SceneElements	import Base, Town, Market, Storage, Road, Speed, Train
+from SceneElements	import BaseConsts, Base, Town, Market, Storage, Road, Speed, Train
 from Player			import Player
 from Strategy		import RandomStrategy, PrimitiveStrategy
 
@@ -26,7 +26,7 @@ class Game(QWidget):
 	BUTTON_RIGHT = 2
 
 	# Game Consts
-	GAME_TICK  = 1000
+	GAME_TICK  = 4000
 	FRAME_TICK = 16
 	WHEEL_SENSITIVITY = 1000
 
@@ -62,8 +62,6 @@ class Game(QWidget):
 
 		self.setGeometry(0, 0, window.size().width(), window.size().height())
 
-		self.show()
-
 	def __initNetwork(self, serverAddr, portNum):
 
 		self.net = Network(serverAddr, portNum)
@@ -73,11 +71,11 @@ class Game(QWidget):
 
 		for base in jsonMap1['posts']:
 			idx = base['point_idx']
-			if base['type'] == Base.TOWN:
+			if base['type'] == BaseConsts.TOWN:
 				self.bases[idx] = Town(base)
-			elif base['type'] == Base.MARKET:
+			elif base['type'] == BaseConsts.MARKET:
 				self.bases[idx] = Market(base)
-			elif base['type'] == Base.STORAGE:
+			elif base['type'] == BaseConsts.STORAGE:
 				self.bases[idx] = Storage(base)
 
 		for jsonPoint in jsonMap0['points']:
@@ -85,7 +83,7 @@ class Game(QWidget):
 			name = 'base ' + str(idx)
 
 			if not idx in self.bases:
-				self.bases[idx] = Base(name, idx, Base.BASE)
+				self.bases[idx] = Base(name, idx, BaseConsts.BASE)
 
 	def __initRoads(self, jsonMap):
 		self.roads = {}
@@ -177,7 +175,7 @@ class Game(QWidget):
 			self.lastY = y
 			self.scene.moveCam(dx, dy)
 
-	def mouseWheelEvent(self, event):
+	def wheelEvent(self, event):
 
 		self.scene.zoomCam(event.angleDelta().y() / Game.WHEEL_SENSITIVITY)
 

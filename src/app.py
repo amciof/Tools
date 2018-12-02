@@ -25,6 +25,7 @@ class App(QMainWindow):
 
 		self.game = Game(SERVER_ADDR, SERVER_PORT, PLAYER, self)
 		self.game.start()
+		self.game.show()
 
 		self.show()
 

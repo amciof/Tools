@@ -1,7 +1,7 @@
 from PyQt5.QtGui  import QPainter, QColor, QPen, QFont, QBrush, QPolygonF, QTextOption
 from PyQt5.QtCore import QPointF, QRectF, Qt
 
-from SceneElements import Base, Town, Market, Storage
+from SceneElements import BaseConsts, Base, Town, Market, Storage
 from SceneElements import Road, Speed, Train
 
 import networkx as nx
@@ -84,28 +84,28 @@ class RenderInfo:
 class Scene:
 	#Resources
 	RESOURCES = {
-		Base.BASE      : initPolygon(6)
-		, Base.TOWN    : initPolygon(4)
-		, Base.MARKET  : initPolygon(5)
-		, Base.STORAGE : initPolygon(5)
+		BaseConsts.BASE      : initPolygon(6)
+		, BaseConsts.TOWN    : initPolygon(4)
+		, BaseConsts.MARKET  : initPolygon(5)
+		, BaseConsts.STORAGE : initPolygon(5)
 	}
 	ZERO_POINT = np.float32([+0.0, +0.0, +1.0])
 
 	#sizes
 	BASE_SIZES = {
-		  Base.BASE    : 40
-		, Base.TOWN    : 80
-		, Base.MARKET  : 60
-		, Base.STORAGE : 60
+		  BaseConsts.BASE    : 40
+		, BaseConsts.TOWN    : 80
+		, BaseConsts.MARKET  : 60
+		, BaseConsts.STORAGE : 60
 	}
 	TRAIN_SIZE = 25
 
 	#colors
 	BASE_COLORS = {
-		  Base.BASE    : QColor(200, 255, 200)
-		, Base.TOWN    : QColor(255,   0,   0)
-		, Base.MARKET  : QColor(  0, 255,   0)
-		, Base.STORAGE : QColor(  0,   0, 255)
+		  BaseConsts.BASE    : QColor(200, 255, 200)
+		, BaseConsts.TOWN    : QColor(255,   0,   0)
+		, BaseConsts.MARKET  : QColor(  0, 255,   0)
+		, BaseConsts.STORAGE : QColor(  0,   0, 255)
 	}
 	ROAD_COLOR  = QColor(  0,   0,   0)
 	TRAIN_COLOR = QColor(255,   0, 255)
@@ -209,7 +209,7 @@ class Scene:
 		self.trainsInfo = {}
 
 		for idx, train in trains.items():
-			data  = Scene.RESOURCES[Base.TOWN]
+			data  = Scene.RESOURCES[BaseConsts.TOWN]
 			model = modelMat(Scene.TRAIN_SIZE, Scene.TRAIN_SIZE, Scene.ZERO_POINT)
 			color = Scene.TRAIN_COLOR
 
@@ -243,7 +243,7 @@ class Scene:
 			pos     = np.array(info.model[:, 2])
 			pos[1] -= size / 2
 
-			data  = Scene.RESOURCES[Base.TOWN]
+			data  = Scene.RESOURCES[BaseConsts.TOWN]
 			model = modelMat(size * Scene.TEXT_X_SCALE, size * Scene.TEXT_Y_SCALE, pos)
 			color = Scene.LABEL_COLOR
 
@@ -265,7 +265,7 @@ class Scene:
 			pos += coef * vec
 
 			size  = Scene.ROAD_LABEL_SIZE
-			data  = Scene.RESOURCES[Base.TOWN]
+			data  = Scene.RESOURCES[BaseConsts.TOWN]
 			model = modelMat(size, size, pos)
 			color = Scene.LABEL_COLOR
 
