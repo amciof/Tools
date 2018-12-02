@@ -113,93 +113,71 @@ class TrainManager:
 		return (currEdge.getIdx(), Speed.STOP, self.train.getIdx())
 
 	def __caseCOLLECTING(self):
-		print('---Collecting---')
-
 		currEdge, currSpeed = self.path.edgesList[self.curr]
 
+		move = None
+
 		if self.train.full():
-			print('--Train is full. Returning to base--')
 			self.state    = TrainState.RETURNING
 			self.edgePos -= currSpeed
-
-			#move
 			move = (currEdge.getIdx(), -currSpeed, self.train.getIdx())
 
 		else:
 			limit = currEdge.getLength() if currSpeed == Speed.FORWARD else 0
 
 			if self.edgePos == limit:
-				print('--End of road--')
 				self.curr += 1
 
 				if self.curr >= len(self.path.edgesList):
-					print('-End of path. Returning to base-')
 					self.state = TrainState.RETURNING
 					self.curr  = len(self.path.edgesList) - 1
 
 					nextEdge, nextSpeed = self.path.edgesList[self.curr]
 
 					self.edgePos -= nextSpeed
-
-					#move
 					move = (currEdge.getIdx(), -currSpeed, self.train.getIdx())
 
 				else:
-					print('-Jumping to new road-')
 					nextEdge, nextSpeed = self.path.edgesList[self.curr]
 
 					self.edgePos = 0 if nextSpeed == Speed.FORWARD else nextEdge.getLength()
-
 					self.edgePos += nextSpeed
-
-					#move
 					move = (nextEdge.getIdx(), nextSpeed, self.train.getIdx())
 
 			else:
-				print('--Continue moving--')
 				self.edgePos += currSpeed
-				#move
 				move = (currEdge.getIdx(), currSpeed, self.train.getIdx())
 
 		return move
 
 	def __caseRETURNING(self):
-		print('---Returning---')
 		currEdge, currSpeed = self.path.edgesList[self.curr]
 		
 		limit = currEdge.getLength() if currSpeed == -Speed.FORWARD else 0
 
+		move = None
+
 		if self.edgePos == limit:
-			print('--End of road--')
 			self.curr += -1
 
 			if self.curr < 0:
-				print('-Returned. Start collecting.-')
 				self.state = TrainState.COLLECTING
 				self.curr  = 0
 
 				nextEdge, nextSpeed = self.path.edgesList[self.curr]
 
 				self.edgePos -= -nextSpeed
-
-				#move
 				move = (currEdge.getIdx(), currSpeed, self.train.getIdx())
 
 			else:
-				print('-Jump to next road-')
 				nextEdge, nextSpeed = self.path.edgesList[self.curr]
 
 				self.edgePos = 0 if nextSpeed == -Speed.FORWARD else nextEdge.getLength()
-
 				self.edgePos += -nextSpeed
-
-				#move
 				move = (nextEdge.getIdx(), -nextSpeed, self.train.getIdx())
 
 		else:
-			print('--Continue moving--')
 			self.edgePos += -currSpeed
-			#move
 			move = (currEdge.getIdx(), -currSpeed, self.train.getIdx())
 
 		return move
@@ -210,6 +188,7 @@ class TrainManager:
 		return self.state
 
 	def validate(self):
+		#assumed to check if server lagged
 		road  = self.train.getRoad()
 		pos   = self.train.getPosition()
 		speed = self.train.getSpeed()
@@ -285,11 +264,11 @@ class PrimitiveStrategy(Strategy):
 
 		return paths
 
-	5
 	#TODO: improve
 	#multiple resources now
 	#need to find shortest path ignoring bases of other resource type
 	#(we don't want to obtain this resource)
+	#can be implemented by passing set of idx of ignored bases
 	def __dijkstra(self, start):
 		INT_INF = 2000000000
 

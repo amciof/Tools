@@ -76,11 +76,18 @@ class Town(Base):
 
 	#logic
 	def update(self, jsonUpdate):
+		self.armor         = jsonUpdate['armor']
+		self.armorCapacity = jsonUpdate['armor_capacity']
 
-		self.product            = jsonUpdate['product']
-		self.productCapacity    = jsonUpdate['product_capacity']
+		self.product         = jsonUpdate['product']
+		self.productCapacity = jsonUpdate['product_capacity']
+
 		self.population         = jsonUpdate['population']
 		self.populationCapacity = jsonUpdate['population_capacity']
+
+		for event in jsonUpdate['events']:
+			self.addEvent(event)
+
 
 	def addEvent(self, event):
 
@@ -109,6 +116,12 @@ class Market(Base):
 		self.product         = jsonUpdate['product']
 		self.productCapacity = jsonUpdate['product_capacity']
 
+		for event in jsonUpdate['events']:
+			self.addEvent(event)
+
+	def addEvent(self, event):
+		pass
+
 class Storage(Base):
 
 	def __init__(self, jsonStorage):
@@ -124,7 +137,14 @@ class Storage(Base):
 		self.replenishment = jsonStorage['replenishment']  # +
 
 
-	def update(self, jsonBase):
+	def update(self, jsonUpdate):
+		self.armor         = jsonUpdate['armor']          # +
+		self.armorCapacity = jsonUpdate['armor_capacity'] # +
+
+		for event in jsonUpdate['events']:
+			self.addEvent(event)
+
+	def addEvent(self, event):
 		pass
 
 

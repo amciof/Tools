@@ -215,4 +215,4 @@ if __name__ == '__main__':
 		json.dump(map1.msg, map1_info, indent='    ')
 
 	with open('Examples/Player.txt', 'w') as player_info:
-		json.dump(map1.msg, player_info, indent='    ')
+		json.dump(player.msg, player_info, indent='    ')

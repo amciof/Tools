@@ -1,13 +1,16 @@
 {
-    "idx": 2,
+    "idx": 3,
     "posts": [
         {
             "armor": 0,
             "armor_capacity": 200,
-            "idx": 3,
+            "events": [],
+            "idx": 7,
+            "level": 1,
             "name": "town-one",
-            "player_idx": "7768971a-3452-4461-8fb7-7a7ce6af5b04",
-            "point_idx": 13,
+            "next_level_price": 100,
+            "player_idx": "53d9546b-b01b-4b67-99e2-522c4ad09de6",
+            "point_idx": 25,
             "population": 3,
             "population_capacity": 10,
             "product": 60,
@@ -15,38 +18,52 @@
             "type": 1
         },
         {
-            "idx": 4,
+            "events": [],
+            "idx": 8,
             "name": "market-big",
-            "point_idx": 16,
-            "product": 36,
-            "product_capacity": 36,
-            "replenishment": 3,
+            "point_idx": 28,
+            "product": 72,
+            "product_capacity": 72,
+            "replenishment": 6,
             "type": 2
         },
         {
-            "idx": 5,
+            "events": [],
+            "idx": 9,
             "name": "market-medium",
-            "point_idx": 17,
-            "product": 28,
-            "product_capacity": 28,
-            "replenishment": 2,
+            "point_idx": 29,
+            "product": 56,
+            "product_capacity": 56,
+            "replenishment": 4,
             "type": 2
         },
         {
-            "idx": 6,
+            "events": [],
+            "idx": 10,
             "name": "market-small",
-            "point_idx": 19,
+            "point_idx": 31,
             "product": 4,
             "product_capacity": 4,
             "replenishment": 1,
             "type": 2
+        },
+        {
+            "armor": 28,
+            "armor_capacity": 28,
+            "events": [],
+            "idx": 11,
+            "name": "storage-medium",
+            "point_idx": 33,
+            "replenishment": 2,
+            "type": 3
         }
     ],
     "ratings": {
-        "7768971a-3452-4461-8fb7-7a7ce6af5b04": {
-            "idx": "7768971a-3452-4461-8fb7-7a7ce6af5b04",
+        "53d9546b-b01b-4b67-99e2-522c4ad09de6": {
+            "idx": "53d9546b-b01b-4b67-99e2-522c4ad09de6",
             "name": "Pingas",
-            "rating": 0
+            "rating": 0,
+            "town": "town-one"
         }
     },
     "trains": [
@@ -55,8 +72,10 @@
             "goods_capacity": 40,
             "goods_type": null,
             "idx": 1,
-            "line_idx": 13,
-            "player_idx": "7768971a-3452-4461-8fb7-7a7ce6af5b04",
+            "level": 1,
+            "line_idx": 31,
+            "next_level_price": 40,
+            "player_idx": "53d9546b-b01b-4b67-99e2-522c4ad09de6",
             "position": 0,
             "speed": 0
         }
