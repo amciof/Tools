@@ -49,17 +49,7 @@ class Game:
 
 		self.__initStateParams()
 
-		self.__initStrategy()
-
-		#test
-		#dist, pred = self.strategy._dijkstra(self.player.home)
-		#print('Shortest paths from base ', self.player.home)
-		#print('Distances')
-		#for idx, d in dist.items():
-		#	print('Distance to ', idx, ': ', d)
-		#print('Predecessors')
-		#for idx, p in pred.items():
-		#	print('Pred of ', idx, ': ', p)
+		self.__initStrategy(mapResp1.msg)
 
 
 	def __initParent(self, window):
@@ -130,14 +120,22 @@ class Game:
 		self.lastX = None
 		self.lastY = None
 
-	def __initStrategy(self):
-		self.strategy = PrimitiveStrategy(self)
+	def __initStrategy(self, jsonMap1):
+		town    = self.player.home
+		markets = []
+
+		for base in jsonMap1['posts']:
+			idx = base['point_idx']
+			if idx != town:
+				markets.append(idx)
+
+		self.strategy = PrimitiveStrategy(self, self.player.home, markets)
 
 	# Logic
 	def start(self):
 		self.gameTickID  = self.window.startTimer(Game.GAME_TICK)
 		self.frameTickID = self.window.startTimer(Game.FRAME_TICK)
-		#self._turn()
+		self._turn()
 
 	# Update
 	def update(self, event):
@@ -197,9 +195,8 @@ class Game:
 			self.window.update()
 
 	def _gameTick(self):
-		#self._turn()
-		#self._updateState()
-		pass
+		self._turn()
+		self._updateState()
 
 	def _turn(self):
 		moves = self.strategy.getMoves()

@@ -80,7 +80,7 @@ class Town(Base):
 	def update(self, jsonUpdate):
 
 		self.product            = jsonUpdate['product']
-		self.productCapacity    =  jsonUpdate['product_capacity']
+		self.productCapacity    = jsonUpdate['product_capacity']
 		self.population         = jsonUpdate['population']
 		self.populationCapacity = jsonUpdate['population_capacity']
 
@@ -91,14 +91,6 @@ class Town(Base):
 	def upgrade(self):
 
 		pass
-
-	def withdrawArmor(self, amount):
-		# for train upgrades
-		if self.armor >= amount:
-			self.armor -= amount
-			return True
-
-		return False
 
 
 class Market(Base):
@@ -115,20 +107,10 @@ class Market(Base):
 		self.productCapacity = jsonMarket['product_capacity'] # +
 		self.replenishment   = jsonMarket['replenishment']    # +
 
-	
-	#logic
 
 	def update(self, jsonUpdate):
 		self.product         = jsonUpdate['product']
 		self.productCapacity = jsonUpdate['product_capacity']
-
-	#????
-	def withdrawProduct(self, amount):
-		if self.product >= amount:
-			self.product -= amount
-			return True
-
-		return False
 
 
 class Storage(Base):
@@ -146,20 +128,8 @@ class Storage(Base):
 		self.replenishment = jsonStorage['replenishment']  # +
 
 
-	#logic
-	def update(self):
-		self.armor = min(
-			self.armor + self.replenishment
-			, self.armorCapacity
-		)
-
-	#????
-	def withdrawArmor(self, amount):
-		if self.armor >= amount:
-			self.armor -= amount
-			return True
-
-		return False
+	def update(self, jsonBase):
+		pass
 
 
 class Road:
@@ -211,7 +181,6 @@ class Train:
 		self.speed    = jsonTrain['speed']    # +
 
 		self.road  = road  # +
-		self.moved = False # +
 
 	def getPlayerIdx(self):
 		return self.playerIdx
@@ -219,30 +188,8 @@ class Train:
 	def getIdx(self):
 		return self.idx
 
-	def setSpeed(self, speed):
-		self.speed = speed
-
 	def getSpeed(self):
 		return self.speed
-
-	def setRoad(self, newRoad):
-		old = self.road
-		pos = self.position
-
-		if pos == 0 or pos == old.getLength():
-			idx1, idx2 = old.getAdjacentIdx()
-
-			curr = idx1 if pos == 0 else idx2
-
-			idx1, idx2 = newRoad.getAdjacentIdx()
-			if curr == idx1:
-				self.position = 0
-				self.road     = newRoad
-			elif curr == idx2:
-				self.position = newRoad.getLength()
-				self.road     = newRoad
-
-			self.speed = 0
 
 	def getRoad(self):
 		return self.road
@@ -250,34 +197,16 @@ class Train:
 	def getPosition(self):
 		return self.position
 
-	def isMoved(self):
-		return self.moved
-
-	def reset(self):
-		self.moved = False
-
-	def move(self):
-		if self.moved:
-			return
-
-		length = self.road.length
-		pos    = self.position
-		speed  = self.speed
-	
-		newPos = pos + speed
-		if newPos > length:
-			self.position = length
-		elif newPos < 0:
-			self.position = 0
-		else:
-			self.position = newPos
-			self.moved    = True
-
 	def upgrade(self):
 		pass
 
 	def onCooldown(self):
 		return self.cooldown == 0
+
+
+	def full(self):
+		return self.goods == self.goodsCapacity
+
 
 	def update(self, jsonUpdate, additional):
 		self.goods         = jsonUpdate['goods']
@@ -287,7 +216,6 @@ class Train:
 		self.speed         = jsonUpdate['speed']
 
 		self.road  = additional['road']
-		self.moved = False
 
 	def printStats(self):
 		print('Goods   : ', self.goods)
