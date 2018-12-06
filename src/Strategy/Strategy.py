@@ -1,5 +1,8 @@
 
-from SceneElements import Speed
+import sys
+sys.path.append('../')
+
+from src.Game.GameElements import Speed
 
 import random as rand
 import heapq  as hq
@@ -214,7 +217,7 @@ class PrimitiveStrategy(Strategy):
 
 		self.trainState = {}
 		for idx, train in self.game.trains.items():
-			self.trainState[idx] = TrainManager(self, self.allPath[25][33], train)
+			self.trainState[idx] = TrainManager(self, self.allPath[333][336], train)
 
 	#probably unnesessary
 	def __cacheAllPaths(self):

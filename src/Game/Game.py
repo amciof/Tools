@@ -1,32 +1,27 @@
-from PyQt5.QtGui  		import QPainter
 
+import sys
+sys.path.append('../')
+
+
+from PyQt5.QtGui     import QPainter
 from PyQt5.QtWidgets import QApplication, QWidget, QMainWindow, QLabel
 from PyQt5.QtGui     import QIcon, QPainter, QColor, QBrush
 from PyQt5.QtCore    import Qt
 
-from Networking		import Network, Options
-from Scene			import Scene
-from SceneElements	import BaseConsts, Base, Town, Market, Storage, Road, Speed, Train
-from Player			import Player
-from Strategy		import RandomStrategy, PrimitiveStrategy
+
+from Networking.Networking import Network, Options
+
+from Render.Scene import Scene
+
+from Game.GameElements import BaseConsts, Base, Town, Market, Storage, Road, Speed, Train
+from Game.Player	   import Player
+
+from Strategy.Strategy import RandomStrategy, PrimitiveStrategy
 
 
 class Game(QWidget):
-
-	# Event Consts
-	EVENT_TIMER 		= 1
-	EVENT_MOUSE_PRESS   = 2
-	EVENT_MOUSE_RELEASE = 3
-	EVENT_MOUSE_MOVE    = 5
-	EVENT_MOUSE_WHEEL   = 31
-	EVENT_PAINT 		= 12
-
-	# Button Keys
-	BUTTON_LEFT  = 1
-	BUTTON_RIGHT = 2
-
 	# Game Consts
-	GAME_TICK  = 1000
+	GAME_TICK  = 200
 	FRAME_TICK = 16
 	WHEEL_SENSITIVITY = 1000
 

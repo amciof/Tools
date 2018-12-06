@@ -1,8 +1,11 @@
+import sys
+sys.path.append('../')
+
 from PyQt5.QtGui  import QPainter, QColor, QPen, QFont, QBrush, QPolygonF, QTextOption
 from PyQt5.QtCore import QPointF, QRectF, Qt
 
-from SceneElements import BaseConsts, Base, Town, Market, Storage
-from SceneElements import Road, Speed, Train
+from Game.GameElements import BaseConsts, Base, Town, Market, Storage
+from Game.GameElements import Road, Speed, Train
 
 import networkx as nx
 import numpy    as np
@@ -86,7 +89,7 @@ class Scene:
 	RESOURCES = {
 		BaseConsts.BASE      : initPolygon(6)
 		, BaseConsts.TOWN    : initPolygon(4)
-		, BaseConsts.MARKET  : initPolygon(5)
+		, BaseConsts.MARKET  : initPolygon(3)
 		, BaseConsts.STORAGE : initPolygon(5)
 	}
 	ZERO_POINT = np.float32([+0.0, +0.0, +1.0])

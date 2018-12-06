@@ -205,14 +205,14 @@ if __name__ == '__main__':
 	map1   = net.requestMap(Options.LAYER_1)
 	player = net.requestPlayer()
 
-	with open('Examples/Login.txt', 'w') as login_info:
+	with open('../Watch/Login.txt', 'w') as login_info:
 		json.dump(login.msg, login_info, indent='    ')
 
-	with open('Examples/Map0.txt', 'w') as map0_info:
+	with open('../Watch/Map0.txt', 'w') as map0_info:
 		json.dump(map0.msg, map0_info, indent='    ')
 
-	with open('Examples/Map1.txt', 'w') as map1_info:
+	with open('../Watch/Map1.txt', 'w') as map1_info:
 		json.dump(map1.msg, map1_info, indent='    ')
 
-	with open('Examples/Player.txt', 'w') as player_info:
+	with open('../Watch/Player.txt', 'w') as player_info:
 		json.dump(player.msg, player_info, indent='    ')

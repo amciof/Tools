@@ -4,7 +4,7 @@ from PyQt5.QtGui  import QIcon, QPainter, QColor, QBrush
 from PyQt5.QtCore import Qt
 import random
 
-from Game import Game
+from Game.Game import Game
 
 
 SERVER_ADDR = 'wgforge-srv.wargaming.net'
