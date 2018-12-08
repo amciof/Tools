@@ -16,10 +16,14 @@ from Render.Scene import Scene
 from Game.GameElements import BaseConsts, Base, Town, Market, Storage, Road, Speed, Train
 from Game.Player	   import Player
 
-from Strategy.Strategy import RandomStrategy, PrimitiveStrategy
+from Strategy.PrimitiveStrategy import PrimitiveStrategy
 
 
 class Game(QWidget):
+	# Button Keys
+	BUTTON_LEFT  = 1
+	BUTTON_RIGHT = 2
+
 	# Game Consts
 	GAME_TICK  = 200
 	FRAME_TICK = 16
@@ -189,7 +193,7 @@ class Game(QWidget):
 		self._updateState()
 
 	def _turn(self):
-		moves = self.strategy.getMoves()
+		moves = self.strategy.getActions()
 		for move in moves:
 			self.net.requestMove(move[0], move[1], move[2])
 
