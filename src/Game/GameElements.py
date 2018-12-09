@@ -1,6 +1,6 @@
 
 #bases
-class BaseConsts:
+class BaseType:
 	BASE    = 0
 	TOWN    = 1
 	MARKET  = 2
@@ -37,7 +37,7 @@ class Base:
 class Town(Base):
 
 	def __init__(self, jsonTown):
-		Base.__init__(self, jsonTown['name'], jsonTown['point_idx'], BaseConsts.TOWN)
+		Base.__init__(self, jsonTown['name'], jsonTown['point_idx'], BaseType.TOWN)
 
 		self.idx = jsonTown['idx'] # +
 
@@ -104,7 +104,7 @@ class Market(Base):
 			self
 			, jsonMarket['name']
 			, jsonMarket['point_idx']
-			, BaseConsts.MARKET
+			, BaseType.MARKET
 		)
 
 		self.product         = jsonMarket['product']          # +
@@ -129,7 +129,7 @@ class Storage(Base):
 			self
 			, jsonStorage['name']
 			, jsonStorage['point_idx']
-			, BaseConsts.STORAGE
+			, BaseType.STORAGE
 		)
 
 		self.armor         = jsonStorage['armor']          # +

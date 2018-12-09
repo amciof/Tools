@@ -3,69 +3,94 @@ import sys
 sys.path.append('../')
 
 
-from .StrategyAbs import Strategy
-from .PathWalker  import PathWalker, Path, StateType, Idle, WalkingRoad, WalkingPath, Waiting, Broken
+from Strategy.StrategyAbs import Strategy
+from Strategy.PathWalker  import PathWalker, Path, WalkerStateType, Idle, WalkingRoad, WalkingPath, Waiting, Broken
 
 from Game.GameElements import Speed
+from Game.GameElements import BaseType
+
 
 import heapq  as hq
 
 
-INT_INF = 2000000000
+class StrategyStateType:
+	pass
 
+class StrategyState:
+	pass
+
+
+
+INT_INF = 2000000000
 
 class SmarterStrategy(Strategy):
 	
+	UPGRADES_TOWN = {
+		  1 : 100
+		, 2 : 200
+	}
+	UPGRADES_TRAIN = {
+		  1 : 40
+		, 2 : 80
+	}
+
+	TRAIN = 0
+	TOWN  = 1
+
+	#UPGRADE action
+	#This action upgrades trains and posts to the next level.
+
+	#The server expects to receive following required values:
+
+	#posts - list with indexes of posts to upgrade
+	#trains - list with indexes of trains to upgrade
+	#Example: UPGRADE request
+	#b'\x04\x00\x00\x00\x19\x00\x00\x00{"posts":[],"trains":[1]}'
+
+	#|action|msg length|msg                      |
+	#|------|----------|-------------------------|
+	#|4     |25        |{"posts":[],"trains":[1]}|
+
 	def __init__(self, game, updateSequence):
 		Strategy.__init__(self, game)
 
-		self.town     = None
-		self.markets  = []
-		self.storages = []
+		self.town = self.game.player.home;
 
-		self.updateSequence = updateSequence
+		self.markets    = [
+			base.getBaseIdx() 
+				for idx, base in self.game.bases.items() 
+					if base.getType() == BaseType.MARKET
+		]
 
-		self.pathWalkers = []
+		self.storages   = [
+			base.getBaseIdx() 
+				for idx, base in self.game.bases.items() 
+					if base.getType() == BaseType.STORAGE
+		]
+
+		self.pathWalkers = [
+			PathWalker(self, train) 
+				for idx, train in self.game.trains.items()
+		]
+
+		#self.updateSequence = updateSequence
+		self.updateSequence = [TOWN, TOWN, TRAIN, TRAIN]
 
 
 	def getActions(self):
 
-		pass
+		idle = [
+			walker
+			for walker in self.pathWalkers 
+				if walker.peekState().getType() == WalkerStateType.IDLE
+		]
+
+		for walker in idle:
+			pass
+		
 
 
 	#path finding
-	def __restorePaths(self, start, pred):
-		paths = {}
-		
-		for idx in self.game.bases:
-			if idx != start:
-				path = Path(start, idx)
-				
-				curr = idx
-				while pred[curr] != -1:
-					next = pred[curr]
-
-					edge = self.graph[next][curr]
-
-					edgeId = edge.getIdx()
-					length = edge.getLength()
-					idx1, idx2 = edge.getAdjacentIdx()
-
-					speed = Speed.FORWARD if next == idx1 else Speed.BACKWARD
-					path.edgesList.append( (edge, speed) )
-					path.length += length
-
-					curr = next
-
-				path.edgesList = path.edgesList[::-1]
-				for i, unit in enumerate(path.edgesList):
-					edge, speed = unit
-					path.edgesDict[edge.getIdx()] = (i, edge, speed)
-
-				paths[idx] = path
-
-		return paths
-
 	def __dijkstra(self, start):
 		pqueue = []
 		dist = {}
@@ -93,7 +118,6 @@ class SmarterStrategy(Strategy):
 
 		return dist, pred
 
-	#TODO
 	def __dijkstraIgnoreVertexes(self, start, ignoreVertexes):
 		pqueue = []
 		dist = {}
@@ -113,6 +137,10 @@ class SmarterStrategy(Strategy):
 				continue
 
 			for to, edge in self.graph[curr].items():
+
+				if to in ignoreVertexes:
+					continue
+
 				newDist = dist[curr] + edge.length
 				if newDist < dist[to]:
 					dist[to] = newDist
@@ -121,7 +149,6 @@ class SmarterStrategy(Strategy):
 
 		return dist, pred
 
-	#TODO
 	def __dijkstraIgnoreEdges(self, start, ignoreEdges):
 		pqueue = []
 		dist = {}
@@ -141,6 +168,10 @@ class SmarterStrategy(Strategy):
 				continue
 
 			for to, edge in self.graph[curr].items():
+
+				if edge.getIdx() in ignoreEdges:
+					continue
+
 				newDist = dist[curr] + edge.length
 				if newDist < dist[to]:
 					dist[to] = newDist
@@ -149,5 +180,3 @@ class SmarterStrategy(Strategy):
 
 		return dist, pred
 
-
-	

@@ -13,7 +13,7 @@ from Networking.Networking import Network, Options
 
 from Render.Scene import Scene
 
-from Game.GameElements import BaseConsts, Base, Town, Market, Storage, Road, Speed, Train
+from Game.GameElements import BaseType, Base, Town, Market, Storage, Road, Speed, Train
 from Game.Player	   import Player
 
 from Strategy.PrimitiveStrategy import PrimitiveStrategy
@@ -71,11 +71,11 @@ class Game(QWidget):
 
 		for base in jsonMap1['posts']:
 			idx = base['point_idx']
-			if base['type'] == BaseConsts.TOWN:
+			if base['type'] == BaseType.TOWN:
 				self.bases[idx] = Town(base)
-			elif base['type'] == BaseConsts.MARKET:
+			elif base['type'] == BaseType.MARKET:
 				self.bases[idx] = Market(base)
-			elif base['type'] == BaseConsts.STORAGE:
+			elif base['type'] == BaseType.STORAGE:
 				self.bases[idx] = Storage(base)
 
 		for jsonPoint in jsonMap0['points']:
@@ -83,7 +83,7 @@ class Game(QWidget):
 			name = 'base ' + str(idx)
 
 			if not idx in self.bases:
-				self.bases[idx] = Base(name, idx, BaseConsts.BASE)
+				self.bases[idx] = Base(name, idx, BaseType.BASE)
 
 	def __initRoads(self, jsonMap):
 		self.roads = {}

@@ -12,8 +12,8 @@ class Path:
 	D_INDEX = 0 #path.roadsDict[roadIdx][0] -> path.roadsDict[roadIdx][Path.D_INDEX]
 	D_SPEED = 1 #path.roadsDict[roadIdx][1] -> path.roadsDict[roadIdx][Path.D_SPEED]
 
-	L_ROAD  = 0 #path.roadsList[index][0] -> path.roadsDict[index][Path.L_ROAD]
-	L_SPEED = 1 #path.roadsList[index][0] -> path.roadsDict[index][Path.L_SPEED]
+	L_ROAD  = 0 #path.roadsList[index][0] -> path.roadsList[index][Path.L_ROAD]
+	L_SPEED = 1 #path.roadsList[index][0] -> path.roadsList[index][Path.L_SPEED]
 
 	#start  -> path start
 	#end    -> path end
@@ -21,29 +21,54 @@ class Path:
 	#roadsList -> list of tuples(roadIdx, speed)
 	#length -> path length
 
-	def __init__(self, start, end, length, roadsList, roadsDict):
-		self.start  = start
-		self.end    = end
+	def __init__(self, adjacencyRel, dist, pred, start, end):
+		self.start = start
+		self.end   = end
 
-		self.length = length
+		self.length = dist[end]
 
-		self.roadsDict = roadsDict
-		self.roadsList = roadsList
+		self.roadsDict, self.roadsList = self.__restorePath(adjacencyRel, end, pred)
+
+	def __restorePath(self, adjacencyRel, end, pred):
+		roadsDict = {}
+		roadsList = []
+
+		curr = end
+		while pred[curr] != -1:
+			next = pred[curr]
+
+			road = self.adjacencyRel[next][curr]
+
+			roadId = road.getIdx()
+			length = road.getLength()
+
+			idx1, idx2 = edge.getAdjacentIdx()
+			speed = Speed.FORWARD if next == idx1 else Speed.BACKWARD
+
+			roadsList.append((roadId, speed))
+
+			curr = next
+
+		roadsList = roadsList[::-1]
+		for i, unit in enumerate(roadsList):
+			roadId, speed = unit
+			roadsDict[roadId] = (i, speed)
+
+		return roadsDict, roadsList
 
 
-	def getReversed(self):
-		roadsList = [
-			(road, -speed) for road, speed in reversed(self.roadsList)
-		]
-		roadsDict = {
-			elem[Path.L_ROAD] : (i, -elem[Path.SPEED]) for i, elem in enumerate(roadsList)
-		}
-		
-		return Path(self.end, self.start, self.length, roadsList, roadsDict)
+	#def getReversed(self):
+	#	roadsList = [
+	#		(road, -speed) for road, speed in reversed(self.roadsList)
+	#	]
+	#	roadsDict = {
+	#		elem[Path.L_ROAD] : (i, -elem[Path.SPEED]) for i, elem in enumerate(roadsList)
+	#	}	
+	#	return Path(self.end, self.start, self.length, roadsList, roadsDict)
 
 
 #states
-class StateType:
+class WalkerStateType:
 	IDLE = 0
 
 	WALKING_PATH = 1
@@ -53,7 +78,7 @@ class StateType:
 
 	BROKEN  = -1
 
-class State:
+class WalkerState:
 
 	def __init__(self, stateType, owner, train):
 		self.stateType = stateType
@@ -74,11 +99,11 @@ class State:
 		return self.owner
 
 
-class Idle(State):
+class Idle(WalkerState):
 
 	def __init__(self, owner, train):
 
-		State.__init__(self, StateType.IDLE, owner, train)	
+		WalkerState.__init__(self, WalkerStateType.IDLE, owner, train)	
 
 
 	def getAction(self):
@@ -86,10 +111,10 @@ class Idle(State):
 		return (self.train.getRoad().getIdx(), Speed.STOP, self.train.getIdx())
 
 
-class WalkingPath(State):
+class WalkingPath(WalkerState):
 
 	def __init__(self, owner, train, path):
-		State.__init__(self, StateType.WALKING_PATH, owner, train)
+		WalkerState.__init__(self, WalkerStateType.WALKING_PATH, owner, train)
 		
 		self.path  = path
 
@@ -132,10 +157,10 @@ class WalkingPath(State):
 		return action
 
 
-class WalkingRoad(State):
+class WalkingRoad(WalkerState):
 
 	def __init__(self, owner, train, speed):
-		State.__init__(self, StateType.WALKING_ROAD, owner, train)
+		WalkerState.__init__(self, WalkerStateType.WALKING_ROAD, owner, train)
 
 		self.speed   = speed
 		self.roadIdx = train.getRoad().getIdx()
@@ -160,10 +185,10 @@ class WalkingRoad(State):
 		return action
 
 
-class Waiting(State):
+class Waiting(WalkerState):
 
 	def __init__(self, owner, train, wait):
-		State.__init__(self, StateType.WAITING, owner)
+		WalkerState.__init__(self, WalkerStateType.WAITING, owner)
 
 		self.train = train
 		self.wait  = wait
@@ -181,10 +206,10 @@ class Waiting(State):
 		return action
 
 
-class Broken(State):
+class Broken(WalkerState):
 
 	def __init__(self, owner, train):
-		State.__init__(self, StateType.BROKEN, owner)
+		WalkerState.__init__(self, WalkerStateType.BROKEN, owner)
 
 		self.train = train
 
@@ -213,7 +238,7 @@ class PathWalker:
 		self.stateStack.append(state)
 
 	def popState(self):
-		if self.stateStack[-1].getType() != StateType.IDLE:
+		if self.stateStack[-1].getType() != WalkerStateType.IDLE:
 			del self.stateStack[-1]
 
 	def peekState(self):
