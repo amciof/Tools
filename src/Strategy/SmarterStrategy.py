@@ -51,6 +51,9 @@ class SmarterStrategy(Strategy):
 	#|------|----------|-------------------------|
 	#|4     |25        |{"posts":[],"trains":[1]}|
 
+	#Теперь возможны прибытия беженцев (от 1 до 2) с вероятностью 50% 
+	#и периодом появления [10 ходов * кол-во беженцев]
+
 	def __init__(self, game, updateSequence):
 		Strategy.__init__(self, game)
 
@@ -88,8 +91,6 @@ class SmarterStrategy(Strategy):
 		for walker in idle:
 			pass
 		
-
-
 	#path finding
 	def __dijkstra(self, start):
 		pqueue = []
