@@ -180,4 +180,3 @@ class SmarterStrategy(Strategy):
 					hq.heappush(pqueue, (dist[to], to))
 
 		return dist, pred
-
