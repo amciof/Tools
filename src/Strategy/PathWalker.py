@@ -24,7 +24,7 @@ class Path:
 	#end    -> path end
 	#roadsDict -> dict of (key: roadIdx, value: tuple(i_list, speed))
 	#roadsList -> list of tuples(roadIdx, speed)
-	#basesSequence -> dict of (key : baseId, value : edge to go)
+	#basesSequence -> dict of (key : baseId, value : tuple(roadIdx, speed))
 	#length -> path length
 
 	def __init__(self, adjacencyRel, dist, pred, start, end):
@@ -56,8 +56,9 @@ class Path:
 			else:
 				speed = Speed.BACKWARD
 
-			roadsList.append((roadId, speed))
-			basesSequence[nextBase] = roadId
+			elem = (roadId, speed)
+			roadsList.append(elem)
+			basesSequence[nextBase] = elem
 
 			curr = next	
 
@@ -122,7 +123,7 @@ class Idle(WalkerState):
 		
 		return (self.train.getRoad().getIdx(), Speed.STOP, self.train.getIdx())
 
-#TODO: improve logic so it can handle "Off the path" case correctly(use basesSequence)
+
 class WalkingPath(WalkerState):
 
 	class Params(WalkerState.Params):
@@ -138,7 +139,6 @@ class WalkingPath(WalkerState):
 
 	
 	def getAction(self):
-
 		road = self.train.getRoad()
 
 		if road.getIdx() in self.path.roadsDict:
@@ -168,16 +168,36 @@ class WalkingPath(WalkerState):
 				action = (road.getIdx(), currSpeed, self.train.getIdx())
 
 		else:
-			self.owner.pushState(Broken(self.owner, self.train))
+			base = self.__onPath()
+			if base != -1:
+				currElem  = self.path.basesSequence[base]
+				currSpeed = currElem[Path.L_SPEED]
+				currRoad  = currElem[Path.L_ROAD]
 
-			action = self.owner.getAction()
+				action = (currRoad, currSpeed, self.train.getIdx())
+
+			else:
+				self.owner.pushState(Broken, None)
+
+				action = self.owner.getAction()
 
 		return action
 
-	#TODO
-	def __offPath(self):
-		pass
+	def __onPath(self):
+		road = self.train.getRoad()
+		pos  = self.train.getPosition()
 
+		idx1, idx2 = road.getAdjacentIdx()
+		length     = road.getLength()
+		
+		if pos == 0 or pos == length:
+			curr = idx1 if pos == 0 else idx2
+
+			if curr in self.path.basesSequence:
+				return curr
+
+		return -1
+		
 
 class WalkingRoad(WalkerState):
 
@@ -196,7 +216,7 @@ class WalkingRoad(WalkerState):
 
 	def getAction(self):
 		if train.getRoad().getIdx() != self.roadIdx:
-			self.owner.pushState(Broken(self.owner, self.train))
+			self.owner.pushState(Broken, None)
 			action = self.owner.getAction()
 
 		else:

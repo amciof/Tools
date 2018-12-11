@@ -1,6 +1,8 @@
 import sys
 sys.path.append('../')
 
+import heapq  as hq
+
 
 from Strategy.StrategyAbs import Strategy
 from Strategy.PathWalker  import PathWalker, Path, WalkerStateType, Idle, WalkingRoad, WalkingPath, Waiting, Broken
@@ -8,8 +10,8 @@ from Strategy.PathWalker  import PathWalker, Path, WalkerStateType, Idle, Walkin
 from Game.GameElements import Speed
 from Game.GameElements import BaseType
 
+from Networking.Networking import Action
 
-import heapq  as hq
 
 
 
@@ -23,6 +25,7 @@ class StrategyState:
 
 INT_INF = 2000000000
 
+#ух бля, аж обои отклеиваются
 class SingleTrainStrategy(Strategy):
 	
 	UPGRADES_TOWN = {
@@ -57,19 +60,22 @@ class SingleTrainStrategy(Strategy):
 	def __init__(self, game, updateSequence):
 		Strategy.__init__(self, game)
 
-		self.town = self.game.player.home;
+		self.town = self.game.bases[self.game.player.home]
 
 		self.markets = [
 			base.getBaseIdx() 
 				for idx, base in self.game.bases.items() 
 					if base.getType() == BaseType.MARKET
 		]
+		self.markets.sort(key=lambda market: market.replenishment)
 
 		self.storages = [
 			base.getBaseIdx() 
 				for idx, base in self.game.bases.items() 
 					if base.getType() == BaseType.STORAGE
 		]
+		self.markets.sort(key=lambda storage: storage.replenishment)
+		
 
 		#self.pathWalkers = [
 		#	PathWalker(self, train) 
@@ -83,29 +89,45 @@ class SingleTrainStrategy(Strategy):
 		#self.updateSequence = updateSequence
 		self.updateSequence = [TOWN, TOWN, TRAIN, TRAIN]
 
+		#some cached paths
+		self.toMarkets   = None
+		self.fromMarkets = None
+
+		self.toStorages   = None
+		self.fromStorages = None
+
 
 	def getActions(self):
-
+		#in this strategy pathwalker is idle => it's in the town
+		
 		if self.pathWalker.idle():
-			if self.__canObtainArmor():
-				#obtain armor
-				pass
-			else:
-				#obtain product
-				pass
+			self.__tryUpgrade()
 
-		#return action
+			if not self.__tryObtainArmor():
+				self.__obtainProduct()
+
+		return self.pathWalker.getAction()
+
+
+	def __tryUpgrade(self):
 		pass
 
+	def __tryObtainArmor(self):
+		for storage in self.storages:
 
-	def __canObtainArmor(self):
-		pass
 
-	def __createPathProgram(self):
+
+			pass
+
+		return False
+
+	def __obtainProduct(self):
 		pass
 		
 
 	#path finding
+	#returns dist, pred
+
 	#TODO: dijkstra with criteria(to evade multiple methods)
 	def __dijkstra(self, start):
 		pqueue = []
