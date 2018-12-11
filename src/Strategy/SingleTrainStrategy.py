@@ -1,4 +1,3 @@
-
 import sys
 sys.path.append('../')
 
@@ -13,6 +12,7 @@ from Game.GameElements import BaseType
 import heapq  as hq
 
 
+
 class StrategyStateType:
 	pass
 
@@ -23,7 +23,7 @@ class StrategyState:
 
 INT_INF = 2000000000
 
-class SmarterStrategy(Strategy):
+class SingleTrainStrategy(Strategy):
 	
 	UPGRADES_TOWN = {
 		  1 : 100
@@ -59,22 +59,26 @@ class SmarterStrategy(Strategy):
 
 		self.town = self.game.player.home;
 
-		self.markets    = [
+		self.markets = [
 			base.getBaseIdx() 
 				for idx, base in self.game.bases.items() 
 					if base.getType() == BaseType.MARKET
 		]
 
-		self.storages   = [
+		self.storages = [
 			base.getBaseIdx() 
 				for idx, base in self.game.bases.items() 
 					if base.getType() == BaseType.STORAGE
 		]
 
-		self.pathWalkers = [
-			PathWalker(self, train) 
-				for idx, train in self.game.trains.items()
-		]
+		#self.pathWalkers = [
+		#	PathWalker(self, train) 
+		#		for idx, train in self.game.trains.items()
+		#]
+
+		#we have only one train
+		train = list(self.game.trains.values())[0]
+		self.pathWalker = PathWalker(self, train)
 
 		#self.updateSequence = updateSequence
 		self.updateSequence = [TOWN, TOWN, TRAIN, TRAIN]
@@ -82,16 +86,27 @@ class SmarterStrategy(Strategy):
 
 	def getActions(self):
 
-		idle = [
-			walker
-			for walker in self.pathWalkers 
-				if walker.peekState().getType() == WalkerStateType.IDLE
-		]
+		if self.pathWalker.idle():
+			if self.__canObtainArmor():
+				#obtain armor
+				pass
+			else:
+				#obtain product
+				pass
 
-		for walker in idle:
-			pass
+		#return action
+		pass
+
+
+	def __canObtainArmor(self):
+		pass
+
+	def __createPathProgram(self):
+		pass
 		
+
 	#path finding
+	#TODO: dijkstra with criteria(to evade multiple methods)
 	def __dijkstra(self, start):
 		pqueue = []
 		dist = {}

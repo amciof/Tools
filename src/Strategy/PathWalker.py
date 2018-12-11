@@ -6,6 +6,11 @@ sys.path.append('../')
 from Game.GameElements import Speed
 
 
+#TODO
+#State.Params can be as component
+#State can access owner's train so no need to pass it to state(why not?)
+
+
 #path struct
 class Path:
 
@@ -19,6 +24,7 @@ class Path:
 	#end    -> path end
 	#roadsDict -> dict of (key: roadIdx, value: tuple(i_list, speed))
 	#roadsList -> list of tuples(roadIdx, speed)
+	#basesSequence -> dict of (key : baseId, value : edge to go)
 	#length -> path length
 
 	def __init__(self, adjacencyRel, dist, pred, start, end):
@@ -27,44 +33,41 @@ class Path:
 
 		self.length = dist[end]
 
-		self.roadsDict, self.roadsList = self.__restorePath(adjacencyRel, end, pred)
+		self.roadsDict, self.roadsList, self.basesSequence = self.__restorePath(adjacencyRel, end, pred)
 
 	def __restorePath(self, adjacencyRel, end, pred):
 		roadsDict = {}
 		roadsList = []
+		basesSequence = {}
 
+		basesSequence[end] = -1
 		curr = end
 		while pred[curr] != -1:
 			next = pred[curr]
 
-			road = self.adjacencyRel[next][curr]
+			road = adjacencyRel[next][curr]
 
 			roadId = road.getIdx()
 			length = road.getLength()
 
 			idx1, idx2 = edge.getAdjacentIdx()
-			speed = Speed.FORWARD if next == idx1 else Speed.BACKWARD
+			if next == idx1:
+				speed = Speed.FORWARD
+			else:
+				speed = Speed.BACKWARD
 
 			roadsList.append((roadId, speed))
+			basesSequence[nextBase] = roadId
 
-			curr = next
+			curr = next	
 
 		roadsList = roadsList[::-1]
 		for i, unit in enumerate(roadsList):
 			roadId, speed = unit
 			roadsDict[roadId] = (i, speed)
 
-		return roadsDict, roadsList
+		return roadsDict, roadsList, basesSequence
 
-
-	#def getReversed(self):
-	#	roadsList = [
-	#		(road, -speed) for road, speed in reversed(self.roadsList)
-	#	]
-	#	roadsDict = {
-	#		elem[Path.L_ROAD] : (i, -elem[Path.SPEED]) for i, elem in enumerate(roadsList)
-	#	}	
-	#	return Path(self.end, self.start, self.length, roadsList, roadsDict)
 
 
 #states
@@ -79,6 +82,9 @@ class WalkerStateType:
 	BROKEN  = -1
 
 class WalkerState:
+
+	class Params:
+		pass
 
 	def __init__(self, stateType, owner, train):
 		self.stateType = stateType
@@ -101,7 +107,13 @@ class WalkerState:
 
 class Idle(WalkerState):
 
-	def __init__(self, owner, train):
+	class Params(WalkerState.Params):
+		
+		def __init__(self, owner, train):
+			pass
+
+
+	def __init__(self, owner, train, params):
 
 		WalkerState.__init__(self, WalkerStateType.IDLE, owner, train)	
 
@@ -110,13 +122,19 @@ class Idle(WalkerState):
 		
 		return (self.train.getRoad().getIdx(), Speed.STOP, self.train.getIdx())
 
-
+#TODO: improve logic so it can handle "Off the path" case correctly(use basesSequence)
 class WalkingPath(WalkerState):
 
-	def __init__(self, owner, train, path):
+	class Params(WalkerState.Params):
+		
+		def __init__(self, path):
+			self.path  = path
+
+
+	def __init__(self, owner, train, params):
 		WalkerState.__init__(self, WalkerStateType.WALKING_PATH, owner, train)
 		
-		self.path  = path
+		self.path = params.path
 
 	
 	def getAction(self):
@@ -156,13 +174,23 @@ class WalkingPath(WalkerState):
 
 		return action
 
+	#TODO
+	def __offPath(self):
+		pass
+
 
 class WalkingRoad(WalkerState):
 
-	def __init__(self, owner, train, speed):
+	class Params(WalkerState.Params):
+		
+		def __init__(self, speed):
+			self.speed = speed
+
+
+	def __init__(self, owner, train, params):
 		WalkerState.__init__(self, WalkerStateType.WALKING_ROAD, owner, train)
 
-		self.speed   = speed
+		self.speed   = params.speed
 		self.roadIdx = train.getRoad().getIdx()
 
 
@@ -187,11 +215,16 @@ class WalkingRoad(WalkerState):
 
 class Waiting(WalkerState):
 
-	def __init__(self, owner, train, wait):
-		WalkerState.__init__(self, WalkerStateType.WAITING, owner)
+	class Params(WalkerState.Params):
+		
+		def __init__(self, wait):
+			self.wait  = wait
 
-		self.train = train
-		self.wait  = wait
+
+	def __init__(self, owner, train, params):
+		WalkerState.__init__(self, WalkerStateType.WAITING, owner, train)
+
+		self.wait  = params.wait
 
 
 	def getAction(self):
@@ -207,11 +240,15 @@ class Waiting(WalkerState):
 
 
 class Broken(WalkerState):
+	#Server lagged(or we are fucking stupid) so train is off the path
+	#pathWalkers owner should fix this
 
-	def __init__(self, owner, train):
-		WalkerState.__init__(self, WalkerStateType.BROKEN, owner)
+	class Params(WalkerState.Params):
+		pass
 
-		self.train = train
+	def __init__(self, owner, train, params):
+
+		WalkerState.__init__(self, WalkerStateType.BROKEN, owner, train)
 
 
 	def getAction(self):
@@ -224,8 +261,9 @@ class PathWalker:
 	
 	def __init__(self, owner, train):
 		self.owner = owner
+		self.train = train
 
-		self.stateStack = [Idle(self, train)]
+		self.stateStack = [Idle(self, train, None)]
 
 
 	def getAction(self):
@@ -233,9 +271,9 @@ class PathWalker:
 		return self.stateStack[-1].getAction()
 
 
-	def pushState(self, state):
+	def pushState(self, stateFactory, params):
 		
-		self.stateStack.append(state)
+		self.stateStack.append(stateFactory(self, train, params))
 
 	def popState(self):
 		if self.stateStack[-1].getType() != WalkerStateType.IDLE:
@@ -249,4 +287,9 @@ class PathWalker:
 	def flushStates(self):
 		
 		del self.stateStack[1 : ]
+
+
+	def idle(self):
+
+		return self.stateStack[-1].getType() == WalkerStateType.IDLE
 	
