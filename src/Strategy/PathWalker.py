@@ -50,7 +50,7 @@ class Path:
 			roadId = road.getIdx()
 			length = road.getLength()
 
-			idx1, idx2 = edge.getAdjacentIdx()
+			idx1, idx2 = road.getAdjacentIdx()
 			if next == idx1:
 				speed = Speed.FORWARD
 			else:
@@ -58,7 +58,7 @@ class Path:
 
 			elem = (roadId, speed)
 			roadsList.append(elem)
-			basesSequence[nextBase] = elem
+			basesSequence[next] = elem
 
 			curr = next	
 
@@ -129,7 +129,7 @@ class WalkingPath(WalkerState):
 	class Params(WalkerState.Params):
 		
 		def __init__(self, path):
-			self.path  = path
+			self.path = path
 
 
 	def __init__(self, owner, train, params):
@@ -293,7 +293,7 @@ class PathWalker:
 
 	def pushState(self, stateFactory, params):
 		
-		self.stateStack.append(stateFactory(self, train, params))
+		self.stateStack.append(stateFactory(self, self.train, params))
 
 	def popState(self):
 		if self.stateStack[-1].getType() != WalkerStateType.IDLE:

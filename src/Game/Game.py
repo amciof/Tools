@@ -9,15 +9,15 @@ from PyQt5.QtGui     import QIcon, QPainter, QColor, QBrush
 from PyQt5.QtCore    import Qt
 
 
-from Networking.Networking import Network, Options
+from Networking.Networking import Network, Options, Action
 
 from Render.Scene import Scene
 
 from Game.GameElements import BaseType, Base, Town, Market, Storage, Road, Speed, Train
 from Game.Player	   import Player
 
-from Strategy.PrimitiveStrategy import PrimitiveStrategy
-
+from Strategy.PrimitiveStrategy   import PrimitiveStrategy
+from Strategy.SingleTrainStrategy import SingleTrainStrategy
 
 class Game(QWidget):
 	# Button Keys
@@ -25,7 +25,7 @@ class Game(QWidget):
 	BUTTON_RIGHT = 2
 
 	# Game Consts
-	GAME_TICK  = 200
+	GAME_TICK  = 5000
 	FRAME_TICK = 16
 	WHEEL_SENSITIVITY = 1000
 
@@ -130,15 +130,8 @@ class Game(QWidget):
 		self.lastY = None
 
 	def __initStrategy(self, jsonMap1):
-		town    = self.player.home
-		markets = []
-
-		for base in jsonMap1['posts']:
-			idx = base['point_idx']
-			if idx != town:
-				markets.append(idx)
-
-		self.strategy = PrimitiveStrategy(self, self.player.home, markets)
+		
+		self.strategy = SingleTrainStrategy(self, [])
 
 
 	#logic
@@ -193,9 +186,13 @@ class Game(QWidget):
 		self._updateState()
 
 	def _turn(self):
-		moves = self.strategy.getActions()
-		for move in moves:
-			self.net.requestMove(move[0], move[1], move[2])
+		actions = self.strategy.getActions()
+		for action, data in actions.items():
+			for datum in data:
+				if action == Action.MOVE:
+					self.net.requestMove(datum[0], datum[1], datum[2])
+				elif action == Action.UPGRADE:
+					pass					
 
 	def _updateState(self):
 		self.net.requestTurn()

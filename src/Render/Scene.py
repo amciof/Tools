@@ -96,12 +96,12 @@ class Scene:
 
 	#sizes
 	BASE_SIZES = {
-		  BaseType.BASE    : 40
-		, BaseType.TOWN    : 80
-		, BaseType.MARKET  : 60
-		, BaseType.STORAGE : 60
+		  BaseType.BASE    : 30
+		, BaseType.TOWN    : 50
+		, BaseType.MARKET  : 30
+		, BaseType.STORAGE : 30
 	}
-	TRAIN_SIZE = 25
+	TRAIN_SIZE = 13
 
 	#colors
 	BASE_COLORS = {
@@ -167,7 +167,7 @@ class Scene:
 
 
 	def __initBasesInfo(self, bases, roads):
-		MAGIC_CONST = 3
+		MAGIC_CONST = 10
 
 		graph = nx.Graph()
 
@@ -315,10 +315,11 @@ class Scene:
 	def renderScene(self, context):
 		self.__drawRoads(context)
 		self.__drawBases(context)
-		self.__drawTrains(context)
 		
 		self.__drawBaseLabels(context)
 		self.__drawRoadLabels(context)
+
+		self.__drawTrains(context)
 	
 	#my little openGL
 	def __transform(self, model, point):

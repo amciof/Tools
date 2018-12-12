@@ -181,17 +181,17 @@ class Train:
 		self.goodsType     = jsonTrain['goods_type']     # -
 		self.goods         = jsonTrain['goods']          # -
 
-		# self.fuelConsumption = jsonTrain['fuel_consumption'] # -
-		# self.fuelCapacity    = jsonTrain['fuel_capacity']    # -
-		# self.fuel            = jsonTrain['fuel']             # -
+		#self.fuelConsumption = jsonTrain['fuel_consumption'] # -
+		#self.fuelCapacity    = jsonTrain['fuel_capacity']    # -
+		#self.fuel            = jsonTrain['fuel']             # -
 
-		# self.level     = jsonTrain['level']            # -
-		# self.nextPrice = jsonTrain['next_level_price'] # -
+		self.level     = jsonTrain['level']            # +
+		self.nextPrice = jsonTrain['next_level_price'] # +
 
 		self.playerIdx = jsonTrain['player_idx'] # +
 		self.idx       = jsonTrain['idx']        # +
 
-		# self.cooldown = jsonTrain['cooldown'] # -
+		self.cooldown = jsonTrain['cooldown'] # -
 		self.position = jsonTrain['position'] # +
 		self.speed    = jsonTrain['speed']    # +
 
@@ -229,13 +229,18 @@ class Train:
 		self.position      = jsonUpdate['position']
 		self.speed         = jsonUpdate['speed']
 
+		self.level     = jsonUpdate['level']            # -
+		self.nextPrice = jsonUpdate['next_level_price'] # -
+
+		self.playerIdx = jsonUpdate['player_idx'] # +
+		self.idx       = jsonUpdate['idx']        # +
+
 		self.road  = additional['road']
 
 	def printStats(self):
 		print('Goods   : ', self.goods)
 		print('Position: ', self.position)
 		print('Speed   : ', self.speed)
-		print('Moved   : ', self.moved)
 		print('Road    : ', self.road.getIdx())
 		print('Length  : ', self.road.getLength())
 		print('UV      : ', self.road.getAdjacentIdx())
