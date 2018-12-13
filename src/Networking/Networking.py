@@ -94,9 +94,18 @@ class Network:
 
 		return self.__getResponse()
 
-	def requestUpgrade(self):
+	def requestUpgrade(self, posts, trains):
+		action = b'\x04\x00\x00\x00'
+		data   = {
+			  'posts'  : posts
+			, 'trains' : trains
+		}
+		data   = json.dumps(data, separators=(',', ':')).encode('ascii')
+		length = len(data).to_bytes(Network.LENGTH_SIZE, 'little')
 
-		pass
+		self.__sendRequest(action + length + data)
+
+		return self.__getResponse()
 
 	def requestTurn(self):
 		action = b'\x05\x00\x00\x00'

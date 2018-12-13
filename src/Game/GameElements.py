@@ -50,9 +50,9 @@ class Town(Base):
 		self.populationCapacity = jsonTown['population_capacity'] # +
 		self.population         = jsonTown['population']          # +
 
-		# self.nextPrice     = jsonTown['next_level_price'] # -
-		# self.trainCooldown = jsonTown['train_cooldown']   # -
-		# self.level         = jsonTown['level']            # -
+		self.nextPrice     = jsonTown['next_level_price'] # +
+		#self.trainCooldown = jsonTown['train_cooldown']   # -
+		self.level         = jsonTown['level']            # +
 
 		self.playerIdx = jsonTown['player_idx'] # -
 
@@ -85,6 +85,9 @@ class Town(Base):
 		self.population         = jsonUpdate['population']
 		self.populationCapacity = jsonUpdate['population_capacity']
 
+		self.nextPrice     = jsonUpdate['next_level_price'] # +
+		self.level         = jsonUpdate['level']            # +
+
 		for event in jsonUpdate['events']:
 			self.addEvent(event)
 
@@ -113,6 +116,8 @@ class Market(Base):
 
 
 	def update(self, jsonUpdate):
+		print('Market: ', self.product)
+
 		self.product         = jsonUpdate['product']
 		self.productCapacity = jsonUpdate['product_capacity']
 
@@ -138,6 +143,7 @@ class Storage(Base):
 
 
 	def update(self, jsonUpdate):
+		print('Storage: ', self.armor)
 		self.armor         = jsonUpdate['armor']          # +
 		self.armorCapacity = jsonUpdate['armor_capacity'] # +
 
@@ -211,9 +217,6 @@ class Train:
 
 	def getPosition(self):
 		return self.position
-
-	def upgrade(self):
-		pass
 
 	def onCooldown(self):
 		return self.cooldown == 0

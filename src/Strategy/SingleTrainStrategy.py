@@ -105,20 +105,24 @@ class SingleTrainStrategy(Strategy):
 	def getActions(self):
 		#in this strategy pathwalker is idle => it's in the town
 		self.actions = {
-			  Action.UPGRADE : []
+			  Action.UPGRADE : {'posts' : [], 'trains' : []}
 			, Action.MOVE    : []
 		}
+
+	
+		print(self.pathWalker.train.level)
+		print(self.town.population)
+		print()
 
 		if self.pathWalker.idle():
 			self.__tryUpgrade()
 
-			bestStorage, bestMarket = self.__obtainArmor(self.town.product)
+			bestStorage = self.__obtainArmor(self.town.product)
 			if not bestStorage is None:
 				self.__walkBestPath(bestStorage, self.town, bestStorage.base)
-				self.__walkBestPath(bestMarket , self.town,  bestMarket.base)
 
 			else:
-				bestMarket = self.__obtainProduct()
+				bestMarket = self.__obtainProduct(self.town.product)
 				if not bestMarket is None:
 					self.__walkBestPath(bestMarket, self.town, bestMarket.base)
 
@@ -130,12 +134,22 @@ class SingleTrainStrategy(Strategy):
 	def __tryUpgrade(self):
 		if len(self.updateSequence) != 0:
 			if self.updateSequence[-1] == TRAIN:
+				idx     = self.pathWalker.train.getIdx()
 				level   = self.pathWalker.train.level
 				price   = self.pathWalker.train.nextPrice
 				onStock = self.town.armor
-				
+				if onStock >= price:
+					self.actions[Action.UPGRADE]['trains'].append(idx)
+					del self.updateSequence[-1]
+
 			elif self.updateSequence[-1] == TOWN:
-				pass
+				idx     = self.town.getBaseIdx()
+				level   = self.town.level
+				price   = self.town.nextPrice
+				onStock = self.town.armor
+				if onStock >= price:
+					self.actions[Action.UPGRADE]['posts'].append(idx)
+					del self.updateSequence[-1]
 
 	def __obtainArmor(self, currProduct):
 		bestStorage = None
@@ -167,7 +181,7 @@ class SingleTrainStrategy(Strategy):
 					else:
 						bestStorage = newBest
 
-		return bestStorage, bestMarket
+		return bestStorage
 
 	def __obtainProduct(self, currProduct):
 		bestMarket = None

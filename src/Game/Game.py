@@ -16,8 +16,8 @@ from Render.Scene import Scene
 from Game.GameElements import BaseType, Base, Town, Market, Storage, Road, Speed, Train
 from Game.Player	   import Player
 
-from Strategy.PrimitiveStrategy   import PrimitiveStrategy
 from Strategy.SingleTrainStrategy import SingleTrainStrategy
+
 
 class Game(QWidget):
 	# Button Keys
@@ -25,7 +25,7 @@ class Game(QWidget):
 	BUTTON_RIGHT = 2
 
 	# Game Consts
-	GAME_TICK  = 5000
+	GAME_TICK  = 500
 	FRAME_TICK = 16
 	WHEEL_SENSITIVITY = 1000
 
@@ -192,7 +192,7 @@ class Game(QWidget):
 				if action == Action.MOVE:
 					self.net.requestMove(datum[0], datum[1], datum[2])
 				elif action == Action.UPGRADE:
-					pass					
+					self.net.requestUpgrade(data['posts'], data['trains'])	
 
 	def _updateState(self):
 		self.net.requestTurn()
