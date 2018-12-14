@@ -1,32 +1,14 @@
 import sys
 sys.path.append('../')
 
-import heapq  as hq
 
-
-from Strategy.StrategyAbs import Strategy
+from Strategy.StrategyAbs import Strategy, INT_INF, TOWN, TRAIN
 from Strategy.PathWalker  import PathWalker, Path, WalkerStateType, Idle, WalkingRoad, WalkingPath, Waiting, Broken
 
 from Game.GameElements import Speed
 from Game.GameElements import BaseType
 
 from Networking.Networking import Action
-
-
-INT_INF = 2000000000
-
-UPGRADES_TOWN = {
-	 1 : 100
-	, 2 : 200
-}
-
-UPGRADES_TRAIN = {
-	1 : 40
-	, 2 : 80
-}
-
-TRAIN = 0
-TOWN  = 1
 
 
 class Best:
@@ -39,50 +21,9 @@ class Best:
 		self.backPred = backPred
 
 class SingleTrainStrategy(Strategy):
-	#UPGRADE action
-	#This action upgrades trains and posts to the next level.
-
-	#The server expects to receive following required values:
-
-	#posts - list with indexes of posts to upgrade
-	#trains - list with indexes of trains to upgrade
-	#Example: UPGRADE request
-	#b'\x04\x00\x00\x00\x19\x00\x00\x00{"posts":[],"trains":[1]}'
-
-	#|action|msg length|msg                      |
-	#|------|----------|-------------------------|
-	#|4     |25        |{"posts":[],"trains":[1]}|
-
-	#Теперь возможны прибытия беженцев (от 1 до 2) с вероятностью 50% 
-	#и периодом появления [10 ходов * кол-во беженцев]
-
 
 	def __init__(self, game, updateSequence):
 		Strategy.__init__(self, game)
-
-		self.town = self.game.bases[self.game.player.home]
-
-		self.markets = [
-			base
-				for idx, base in self.game.bases.items() 
-					if base.getType() == BaseType.MARKET
-		]
-		self.markets.sort(key=lambda market: -market.replenishment)
-		self.marketsIdx = {market.getBaseIdx() for market in self.markets}
-
-		self.storages = [
-			base
-				for idx, base in self.game.bases.items() 
-					if base.getType() == BaseType.STORAGE
-		]
-		self.storages.sort(key=lambda storage: -storage.replenishment)
-		self.storagesIdx = {storage.getBaseIdx() for storage in self.storages}
-		
-
-		#self.pathWalkers = [
-		#	PathWalker(self, train) 
-		#		for idx, train in self.game.trains.items()
-		#]
 
 		#we have only one train
 		train = list(self.game.trains.values())[0]
@@ -90,9 +31,6 @@ class SingleTrainStrategy(Strategy):
 
 		#self.updateSequence = updateSequence
 		self.updateSequence = [TOWN, TOWN, TRAIN, TRAIN]
-
-		#actions to return
-		self.actions = {}
 
 		#some cached paths
 		self.toMarkets   = None
@@ -104,11 +42,7 @@ class SingleTrainStrategy(Strategy):
 
 	def getActions(self):
 		#in this strategy pathwalker is idle => it's in the town
-		self.actions = {
-			  Action.UPGRADE : {'posts' : [], 'trains' : []}
-			, Action.MOVE    : []
-		}
-
+		self.resetActions()
 	
 		print(self.pathWalker.train.level)
 		print(self.town.population)
@@ -126,7 +60,8 @@ class SingleTrainStrategy(Strategy):
 				if not bestMarket is None:
 					self.__walkBestPath(bestMarket, self.town, bestMarket.base)
 
-		self.actions[Action.MOVE].append(self.pathWalker.getAction())
+		idx  = self.pathWalker.train.getIdx()
+		self.actions[Action.MOVE][idx] = self.pathWalker.getAction()
 
 		return self.actions
 
@@ -156,10 +91,10 @@ class SingleTrainStrategy(Strategy):
 		bestMarket  = None
 
 		for storage in self.storages:
-			toDist, toPred = self.__dijkstraIgnoreVertexes(self.town.getBaseIdx(), self.marketsIdx)
+			toDist, toPred = self.dijkstraIgnoreVertexes(self.town.getBaseIdx(), self.marketsIdx)
 
 			if toDist[storage.getBaseIdx()] != INT_INF:
-				backDist, backPred = self.__dijkstra(storage.getBaseIdx())
+				backDist, backPred = self.dijkstra(storage.getBaseIdx())
 
 				timeTo   = toDist[storage.getBaseIdx()]
 				timeBack = backDist[self.town.getBaseIdx()]
@@ -187,10 +122,10 @@ class SingleTrainStrategy(Strategy):
 		bestMarket = None
 
 		for market in self.markets:
-			toDist, toPred = self.__dijkstraIgnoreVertexes(self.town.getBaseIdx(), self.storagesIdx)
+			toDist, toPred = self.dijkstraIgnoreVertexes(self.town.getBaseIdx(), self.storagesIdx)
 
 			if toDist[market.getBaseIdx()] != INT_INF:
-				backDist, backPred = self.__dijkstra(market.getBaseIdx())
+				backDist, backPred = self.dijkstra(market.getBaseIdx())
 
 				timeTo   = toDist[market.getBaseIdx()]
 				timeBack = backDist[self.town.getBaseIdx()] 
@@ -239,95 +174,3 @@ class SingleTrainStrategy(Strategy):
 			WalkingPath
 			, WalkingPath.Params(to)
 		)
-
-
-	#path finding
-	#returns dist, pred
-	def __dijkstra(self, start):
-		pqueue = []
-		dist = {}
-		pred = {}
-		for idx in self.graph:
-			dist[idx] = INT_INF
-			pred[idx] = -1
-
-		dist[start] = 0
-		pred[start] = -1
-		hq.heappush(pqueue, (0, start))
-
-		while len(pqueue) != 0:
-			d, curr = hq.heappop(pqueue)
-
-			if dist[curr] < d:
-				continue
-
-			for to, edge in self.graph[curr].items():
-				newDist = dist[curr] + edge.length
-				if newDist < dist[to]:
-					dist[to] = newDist
-					pred[to] = curr
-					hq.heappush(pqueue, (dist[to], to))
-
-		return dist, pred
-
-	def __dijkstraIgnoreVertexes(self, start, ignoreVertexes):
-		pqueue = []
-		dist = {}
-		pred = {}
-		for idx in self.graph:
-			dist[idx] = INT_INF
-			pred[idx] = -1
-
-		dist[start] = 0
-		pred[start] = -1
-		hq.heappush(pqueue, (0, start))
-
-		while len(pqueue) != 0:
-			d, curr = hq.heappop(pqueue)
-
-			if dist[curr] < d:
-				continue
-
-			for to, edge in self.graph[curr].items():
-
-				if to in ignoreVertexes:
-					continue
-
-				newDist = dist[curr] + edge.length
-				if newDist < dist[to]:
-					dist[to] = newDist
-					pred[to] = curr
-					hq.heappush(pqueue, (dist[to], to))
-
-		return dist, pred
-
-	def __dijkstraIgnoreEdges(self, start, ignoreEdges):
-		pqueue = []
-		dist = {}
-		pred = {}
-		for idx in self.graph:
-			dist[idx] = INT_INF
-			pred[idx] = -1
-
-		dist[start] = 0
-		pred[start] = -1
-		hq.heappush(pqueue, (0, start))
-
-		while len(pqueue) != 0:
-			d, curr = hq.heappop(pqueue)
-
-			if dist[curr] < d:
-				continue
-
-			for to, edge in self.graph[curr].items():
-
-				if edge.getIdx() in ignoreEdges:
-					continue
-
-				newDist = dist[curr] + edge.length
-				if newDist < dist[to]:
-					dist[to] = newDist
-					pred[to] = curr
-					hq.heappush(pqueue, (dist[to], to))
-
-		return dist, pred

@@ -6,11 +6,6 @@ sys.path.append('../')
 from Game.GameElements import Speed
 
 
-#TODO
-#State.Params can be as component
-#State can access owner's train so no need to pass it to state(why not?)
-
-
 #path struct
 class Path:
 
@@ -68,7 +63,6 @@ class Path:
 			roadsDict[roadId] = (i, speed)
 
 		return roadsDict, roadsList, basesSequence
-
 
 
 #states

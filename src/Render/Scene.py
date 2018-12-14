@@ -40,6 +40,12 @@ def initTextFont():
 	
 	return font
 
+def initPolygonBuffer(size):
+	buffer = QPolygonF()
+	for i in range(size):
+		buffer.append(QPointF(0.0, 0.0))
+	return buffer
+
 
 #my little glm lib
 def modelMat(xSize, ySize, pos):
@@ -77,20 +83,25 @@ def cameraMat(x, y):
 
 class RenderInfo:
 
-	def __init__(self, data, model, color):
+	def __init__(self, data, model, color, buffer = None):
 		self.data   = data
 		self.model  = model
 		self.color  = color
-		self.buffer = None
+		self.buffer = buffer
 
 
 class Scene:
 	#Resources
+	BASE_FORM = 6
+	TOWN_FORM = 4
+	MARKET_FORM  = 3
+	STORAGE_FORM = 5
+
 	RESOURCES = {
-		BaseType.BASE      : initPolygon(6)
-		, BaseType.TOWN    : initPolygon(4)
-		, BaseType.MARKET  : initPolygon(3)
-		, BaseType.STORAGE : initPolygon(5)
+		BaseType.BASE      : initPolygon(BASE_FORM)
+		, BaseType.TOWN    : initPolygon(TOWN_FORM)
+		, BaseType.MARKET  : initPolygon(MARKET_FORM)
+		, BaseType.STORAGE : initPolygon(STORAGE_FORM)
 	}
 	ZERO_POINT = np.float32([+0.0, +0.0, +1.0])
 
@@ -123,11 +134,11 @@ class Scene:
 	CAMERA_LIM_COEF = 0.1
 
 
-	BASE_LABEL_SIZE = 40
-	ROAD_LABEL_SIZE = 20
+	BASE_LABEL_SIZE = 25
+	ROAD_LABEL_SIZE = 15
 
 	TEXT_X_SCALE = 1.00
-	TEXT_Y_SCALE = 0.40
+	TEXT_Y_SCALE = 0.35
 
 	TEXT_REL = 0.70
 
@@ -137,6 +148,8 @@ class Scene:
 
 	##init
 	def __init__(self, bases, roads, trains, viewport):
+		self.__initBuffers()
+
 		self.__initViewport(viewport)
 		self.__initCameraComp()
 
@@ -149,6 +162,8 @@ class Scene:
 
 		self.__initBasesLabelsInfo(bases)
 		self.__initRoadsLabelsInfo(roads)
+
+		
 
 
 	def __initViewport(self, viewport):
@@ -179,6 +194,7 @@ class Scene:
 			graph.add_edge(u, v)
 
 		assigned = nx.spring_layout(graph, iterations = MAGIC_CONST * len(bases))
+		assigned = nx.spring_layout(graph, pos = assigned, iterations = MAGIC_CONST * len(bases))
 
 		self.basesInfo = {}
 		for idx, pos in assigned.items():
@@ -190,10 +206,11 @@ class Scene:
 
 			pos = self.__toViewport(pos)
 
-			model = modelMat(size, size, pos)
-			color = Scene.BASE_COLORS[baseType]
+			model  = modelMat(size, size, pos)
+			color  = Scene.BASE_COLORS[baseType]
+			buffer = self.polyBuffers[baseType]
 			
-			self.basesInfo[idx] = RenderInfo(data, model, color)
+			self.basesInfo[idx] = RenderInfo(data, model, color, buffer)
 
 	def __initRoadsInfo(self, roads):
 		self.roadsInfo = {}
@@ -202,21 +219,23 @@ class Scene:
 
 			idx1, idx2 = road.getAdjacentIdx()
 
-			data  = np.int32([idx1, idx2, road.getLength()])
-			model = None
-			color = Scene.ROAD_COLOR
+			data   = np.int32([idx1, idx2, road.getLength()])
+			model  = None
+			color  = Scene.ROAD_COLOR
+			buffer = None
 
-			self.roadsInfo[idx] = RenderInfo(data, model, color)
+			self.roadsInfo[idx] = RenderInfo(data, model, color, buffer)
 
 	def __initTrainsInfo(self, trains):
 		self.trainsInfo = {}
 
 		for idx, train in trains.items():
-			data  = Scene.RESOURCES[BaseType.TOWN]
-			model = modelMat(Scene.TRAIN_SIZE, Scene.TRAIN_SIZE, Scene.ZERO_POINT)
-			color = Scene.TRAIN_COLOR
+			data   = Scene.RESOURCES[BaseType.TOWN]
+			model  = modelMat(Scene.TRAIN_SIZE, Scene.TRAIN_SIZE, Scene.ZERO_POINT)
+			color  = Scene.TRAIN_COLOR
+			buffer = self.polyBuffers[BaseType.TOWN]
 
-			self.trainsInfo[idx] = RenderInfo(data, model, color)
+			self.trainsInfo[idx] = RenderInfo(data, model, color, buffer)
 
 			self.updateTrain(train)
 
@@ -246,11 +265,12 @@ class Scene:
 			pos     = np.array(info.model[:, 2])
 			pos[1] -= size / 2
 
-			data  = Scene.RESOURCES[BaseType.TOWN]
-			model = modelMat(size * Scene.TEXT_X_SCALE, size * Scene.TEXT_Y_SCALE, pos)
-			color = Scene.LABEL_COLOR
-
-			self.basesLabelsInfo[idx] = RenderInfo(data, model, color)
+			data   = Scene.RESOURCES[BaseType.TOWN]
+			model  = modelMat(size * Scene.TEXT_X_SCALE, size * Scene.TEXT_Y_SCALE, pos)
+			color  = Scene.LABEL_COLOR
+			buffer = self.polyBuffers[BaseType.TOWN]
+			
+			self.basesLabelsInfo[idx] = RenderInfo(data, model, color, buffer)
 
 	def __initRoadsLabelsInfo(self, roads):
 		self.roadsLabelsInfo = {}
@@ -275,13 +295,24 @@ class Scene:
 			self.roadsLabelsInfo[idx] = RenderInfo(data, model, color)
 
 
+	def __initBuffers(self):
+		self.polyBuffers = {
+			BaseType.BASE      : initPolygonBuffer(Scene.BASE_FORM)
+			, BaseType.TOWN    : initPolygonBuffer(Scene.TOWN_FORM)
+			, BaseType.MARKET  : initPolygonBuffer(Scene.MARKET_FORM)
+			, BaseType.STORAGE : initPolygonBuffer(Scene.STORAGE_FORM)
+		}
+		self.pointBuffer0 = np.float32([+0.0, +0.0, +1.0])
+		self.pointBuffer1 = np.float32([+0.0, +0.0, +1.0])
+
+
 	##logic
 	def moveCam(self, dx, dy):
 		x = -self.cam[0][2]
 		y = -self.cam[1][2]
 
-		x += dx
-		y += dy
+		x += dx / self.zoom
+		y += dy / self.zoom
 		x = min(max(self.left, x), self.right)
 		y = min(max(self.down, y), self.up   )
 
@@ -311,34 +342,66 @@ class Scene:
 
 
 	##render
-	#TODO: much optimizations & rework here possible
+	#Labels are too heavy
 	def renderScene(self, context):
 		self.__drawRoads(context)
 		self.__drawBases(context)
 		
-		self.__drawBaseLabels(context)
-		self.__drawRoadLabels(context)
+		#self.__drawBaseLabels(context)
+		#self.__drawRoadLabels(context)
 
 		self.__drawTrains(context)
 	
 	#my little openGL
 	def __transform(self, model, point):
-		point = np.matmul(model    , point)
-		point = np.matmul(self.cam , point)
-		point = np.matmul(self.proj, point)
+		#point = np.matmul(model    , point)
+		#point = np.matmul(self.cam , point)
+		#point = np.matmul(self.proj, point)
 
-		point /= point[2]
+		#point /= point[2]
 
-		point = self.__toViewport(point)
+		p0   = self.pointBuffer0
+		p1   = self.pointBuffer1
+		cam  = self.cam
+		proj = self.proj
 
-		return point
+		#p0[0] = model[0][0] * point[0] + model[0][1] * point[1] + model[0][2] * point[2]
+		#p0[1] = model[1][0] * point[0] + model[1][1] * point[1] + model[1][2] * point[2]
+		#p0[2] = model[2][0] * point[0] + model[2][1] * point[1] + model[2][2] * point[2]
+
+		#p1[0] = cam[0][0] * p0[0] + cam[0][1] * p0[1] + cam[0][2] * p0[2]
+		#p1[1] = cam[1][0] * p0[0] + cam[1][1] * p0[1] + cam[1][2] * p0[2]
+		#p1[2] = cam[2][0] * p0[0] + cam[2][1] * p0[1] + cam[2][2] * p0[2]
+
+		#p0[0] = proj[0][0] * p1[0] + proj[0][1] * p1[1] + proj[0][2] * p1[2]
+		#p0[1] = proj[1][0] * p1[0] + proj[1][1] * p1[1] + proj[1][2] * p1[2]
+		#p0[2] = proj[2][0] * p1[0] + proj[2][1] * p1[1] + proj[2][2] * p1[2]
+
+		p0[0] = model[0][0] * point[0] + model[0][2] * point[2]
+		p0[1] = model[1][1] * point[1] + model[1][2] * point[2]
+		p0[2] = model[2][2] * point[2]
+
+		p1[0] = p0[0] + cam[0][2] * p0[2]
+		p1[1] = p0[1] + cam[1][2] * p0[2]
+		p1[2] = cam[2][2] * p0[2]
+
+		p0[0] = proj[0][0] * p1[0]
+		p0[1] = proj[1][1] * p1[1]
+		p0[2] = proj[2][2] * p1[2]
+
+		p0[0] /= p0[2]
+		p0[1] /= p0[2]
+		p0[2]  = 1.0
+
+		p0 = self.__toViewport(p0)
+
+		return p0
 
 	def __toViewport(self, point):
-		temp = np.empty((3,), np.float32)
-		temp[0] = (point[0] + 1.0) * self.w / 2
-		temp[1] = (point[1] + 1.0) * self.h / 2
+		point[0] = (point[0] + 1.0) * self.w / 2
+		point[1] = (point[1] + 1.0) * self.h / 2
 
-		return temp
+		return point
 
 	#draw logic
 	def __drawBases(self, context):
@@ -347,9 +410,9 @@ class Scene:
 		for idx, info in self.basesInfo.items():
 			context.setBrush(QBrush(info.color))
 
-			buffered = self.__bufferPolygon(context, info.data, info.model)
+			self.__bufferPolygon(context, info)
 
-			context.drawPolygon(buffered)
+			context.drawPolygon(info.buffer)
 
 		context.setBrush(restore)
 
@@ -369,9 +432,8 @@ class Scene:
 		for idx, info in self.trainsInfo.items():
 			context.setBrush(QBrush(info.color))
 
-			buffered = self.__bufferPolygon(context, info.data, info.model)
-
-			context.drawPolygon(buffered)
+			self.__bufferPolygon(context, info)
+			context.drawPolygon(info.buffer)
 
 		context.setBrush(restore)
 
@@ -381,15 +443,15 @@ class Scene:
 		for idx, info in self.basesLabelsInfo.items():
 			context.setBrush(QBrush(info.color))
 
-			buffered = self.__bufferPolygon(context, info.data, info.model)
-			context.drawPolygon(buffered)
+			self.__bufferPolygon(context, info)
+			context.drawPolygon(info.buffer)
 
 			Scene.TEXT_FONT.setPointSize(
-				int(Scene.TEXT_REL * (buffered[0].y() - buffered[2].y()))
+				int(Scene.TEXT_REL * (info.buffer[0].y() - info.buffer[2].y()))
 			)
 
 			context.setFont(Scene.TEXT_FONT)
-			context.drawText(QRectF(buffered[2], buffered[0]), str(idx), Scene.TEXT_OPTION)
+			context.drawText(QRectF(info.buffer[2], info.buffer[0]), str(idx), Scene.TEXT_OPTION)
 
 		context.setBrush(restore)
 
@@ -399,28 +461,24 @@ class Scene:
 		for idx, info in self.roadsLabelsInfo.items():
 			context.setBrush(QBrush(info.color))
 
-			buffered = self.__bufferPolygon(context, info.data, info.model)
-			context.drawPolygon(buffered)
+			self.__bufferPolygon(context, info)
+			context.drawPolygon(info.buffer)
 
 			Scene.TEXT_FONT.setPointSize(
-				int(Scene.TEXT_REL * (buffered[0].y() - buffered[2].y()))
+				int(Scene.TEXT_REL * (info.buffer[0].y() - info.buffer[2].y()))
 			)
 
 			length = self.roadsInfo[idx].data[2]
 			context.setFont(Scene.TEXT_FONT)
-			context.drawText(QRectF(buffered[2], buffered[0]), str(length), Scene.TEXT_OPTION)
+			context.drawText(QRectF(info.buffer[2], info.buffer[0]), str(length), Scene.TEXT_OPTION)
 
 		context.setBrush(restore)
 
 	#primitives draw
-	def __bufferPolygon(self, context, data, model):
-		buffer = QPolygonF()
-
-		for point in data:
-			point = self.__transform(model, point)
-			buffer.append(QPointF(point[0], point[1]))
-
-		return buffer
+	def __bufferPolygon(self, context, info):
+		for i, point in enumerate(info.data):
+			point = self.__transform(info.model, point)
+			info.buffer[i] = QPointF(point[0], point[1])
 
 	def __drawLine(self, context, info):
 		idx1, idx2, _ = info.data
@@ -428,10 +486,10 @@ class Scene:
 		model1 = self.basesInfo[idx1].model
 		model2 = self.basesInfo[idx2].model
 
-		point1 = self.__transform(model1, Scene.ZERO_POINT)
-		point2 = self.__transform(model2, Scene.ZERO_POINT)
+		point = self.__transform(model1, Scene.ZERO_POINT)
+		x0, y0 = int(point[0]), int(point[1])
 
-		context.drawLine(
-			 int(point1[0]), int(point1[1])
-			,int(point2[0]), int(point2[1])
-		)
+		point = self.__transform(model2, Scene.ZERO_POINT)
+		x1, y1 = int(point[0]), int(point[1])
+
+		context.drawLine(x0, y0, x1, y1)

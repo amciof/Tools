@@ -25,7 +25,7 @@ class Game(QWidget):
 	BUTTON_RIGHT = 2
 
 	# Game Consts
-	GAME_TICK  = 500
+	GAME_TICK  = 5000
 	FRAME_TICK = 16
 	WHEEL_SENSITIVITY = 1000
 
@@ -187,12 +187,14 @@ class Game(QWidget):
 
 	def _turn(self):
 		actions = self.strategy.getActions()
-		for action, data in actions.items():
-			for datum in data:
-				if action == Action.MOVE:
-					self.net.requestMove(datum[0], datum[1], datum[2])
-				elif action == Action.UPGRADE:
-					self.net.requestUpgrade(data['posts'], data['trains'])	
+
+		for id, action in actions[Action.MOVE].items():
+			self.net.requestMove(action[0], action[1], action[2])
+		
+		self.net.requestUpgrade(
+			actions[Action.UPGRADE]['posts']
+			, actions[Action.UPGRADE]['trains']
+		)
 
 	def _updateState(self):
 		self.net.requestTurn()
