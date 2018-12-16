@@ -188,7 +188,7 @@ class Game(QWidget):
 		actions = self.strategy.getActions()
 
 		for id, action in actions[Action.MOVE].items():
-			self.net.requestMove(action[0], action[1], action[2])
+			resp = self.net.requestMove(action[0], action[1], action[2])
 		
 		self.net.requestUpgrade(
 			actions[Action.UPGRADE]['posts']

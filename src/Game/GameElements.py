@@ -116,8 +116,6 @@ class Market(Base):
 
 
 	def update(self, jsonUpdate):
-		print('Market: ', self.product)
-
 		self.product         = jsonUpdate['product']
 		self.productCapacity = jsonUpdate['product_capacity']
 
@@ -143,7 +141,6 @@ class Storage(Base):
 
 
 	def update(self, jsonUpdate):
-		print('Storage: ', self.armor)
 		self.armor         = jsonUpdate['armor']          # +
 		self.armorCapacity = jsonUpdate['armor_capacity'] # +
 

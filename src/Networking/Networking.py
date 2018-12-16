@@ -66,21 +66,25 @@ class Network:
 
 
 	#requests
-	def requestLogin(self
+	def requestLogin(
+		self
 		, name
 		, password
 		, game       = None
-		, numTurns   = -1
-		, numPlayers = +1
+		, numTurns   = None
+		, numPlayers = None
 	):
 		action = b'\x01\x00\x00\x00'
 
 		data   = {}
+
 		data['name'] = name
+		if not numPlayers is None:
+			data['num_players'] = numPlayers
 		if not game is None:
 			data['game'] = game
-		data['num_turns']   = numTurns
-		data['num_players'] = numPlayers
+		if not numTurns is None:
+			data['num_turns']   = numTurns
 
 		data   = json.dumps(data, separators=(',', ':')).encode('ascii')
 		length = len(data).to_bytes(Network.LENGTH_SIZE, 'little')
@@ -152,9 +156,14 @@ class Network:
 
 		return self.__getResponse()
 
-	def requestGames(self, option):
+	def requestGames(self):
+		action = b'\x07\x00\x00\x00'
+		data   = b''
+		length = b'\x00\x00\x00\x00'
 
-		pass
+		self.__sendRequest(action + length + data)
+
+		return self.__getResponse()
 
 
 	#generalised request
