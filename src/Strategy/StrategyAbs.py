@@ -18,7 +18,8 @@ class Strategy:
 		self.game  = game
 		self.actions = {}
 
-		self.town = self.game.bases[self.game.player.home]
+		self.town    = self.game.bases[self.game.player.home]
+		self.townIdx = self.towm.getBaseIdx()
 
 		self.markets = [
 			base

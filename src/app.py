@@ -1,3 +1,4 @@
+
 import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QMainWindow, QLabel
 from PyQt5.QtGui  import QIcon, QPainter, QColor, QBrush
@@ -19,11 +20,9 @@ class Command:
 	GAMES = 'games'
 	HELP  = 'help'
 
-
 class Shell:
-
 	STATES = {
-		1 : 'initializing'
+		  1: 'initializing'
 		, 2: 'running'
 		, 3: 'finished'
 	}
