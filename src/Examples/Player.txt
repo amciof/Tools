@@ -1,0 +1,64 @@
+{
+    "idx": 2,
+    "posts": [
+        {
+            "armor": 0,
+            "armor_capacity": 200,
+            "idx": 3,
+            "name": "town-one",
+            "player_idx": "7768971a-3452-4461-8fb7-7a7ce6af5b04",
+            "point_idx": 13,
+            "population": 3,
+            "population_capacity": 10,
+            "product": 60,
+            "product_capacity": 200,
+            "type": 1
+        },
+        {
+            "idx": 4,
+            "name": "market-big",
+            "point_idx": 16,
+            "product": 36,
+            "product_capacity": 36,
+            "replenishment": 3,
+            "type": 2
+        },
+        {
+            "idx": 5,
+            "name": "market-medium",
+            "point_idx": 17,
+            "product": 28,
+            "product_capacity": 28,
+            "replenishment": 2,
+            "type": 2
+        },
+        {
+            "idx": 6,
+            "name": "market-small",
+            "point_idx": 19,
+            "product": 4,
+            "product_capacity": 4,
+            "replenishment": 1,
+            "type": 2
+        }
+    ],
+    "ratings": {
+        "7768971a-3452-4461-8fb7-7a7ce6af5b04": {
+            "idx": "7768971a-3452-4461-8fb7-7a7ce6af5b04",
+            "name": "Pingas",
+            "rating": 0
+        }
+    },
+    "trains": [
+        {
+            "goods": 0,
+            "goods_capacity": 40,
+            "goods_type": null,
+            "idx": 1,
+            "line_idx": 13,
+            "player_idx": "7768971a-3452-4461-8fb7-7a7ce6af5b04",
+            "position": 0,
+            "speed": 0
+        }
+    ]
+}

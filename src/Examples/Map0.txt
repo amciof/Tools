@@ -1,0 +1,200 @@
+{
+    "idx": 2,
+    "lines": [
+        {
+            "idx": 13,
+            "length": 1,
+            "points": [
+                13,
+                19
+            ]
+        },
+        {
+            "idx": 14,
+            "length": 1,
+            "points": [
+                20,
+                14
+            ]
+        },
+        {
+            "idx": 15,
+            "length": 1,
+            "points": [
+                21,
+                15
+            ]
+        },
+        {
+            "idx": 16,
+            "length": 1,
+            "points": [
+                22,
+                16
+            ]
+        },
+        {
+            "idx": 17,
+            "length": 1,
+            "points": [
+                23,
+                17
+            ]
+        },
+        {
+            "idx": 18,
+            "length": 2,
+            "points": [
+                24,
+                18
+            ]
+        },
+        {
+            "idx": 19,
+            "length": 1,
+            "points": [
+                19,
+                20
+            ]
+        },
+        {
+            "idx": 20,
+            "length": 2,
+            "points": [
+                20,
+                21
+            ]
+        },
+        {
+            "idx": 21,
+            "length": 2,
+            "points": [
+                21,
+                22
+            ]
+        },
+        {
+            "idx": 22,
+            "length": 1,
+            "points": [
+                22,
+                23
+            ]
+        },
+        {
+            "idx": 23,
+            "length": 3,
+            "points": [
+                23,
+                24
+            ]
+        },
+        {
+            "idx": 24,
+            "length": 1,
+            "points": [
+                24,
+                19
+            ]
+        },
+        {
+            "idx": 25,
+            "length": 2,
+            "points": [
+                13,
+                14
+            ]
+        },
+        {
+            "idx": 26,
+            "length": 2,
+            "points": [
+                14,
+                15
+            ]
+        },
+        {
+            "idx": 27,
+            "length": 1,
+            "points": [
+                15,
+                16
+            ]
+        },
+        {
+            "idx": 28,
+            "length": 3,
+            "points": [
+                16,
+                17
+            ]
+        },
+        {
+            "idx": 29,
+            "length": 1,
+            "points": [
+                17,
+                18
+            ]
+        },
+        {
+            "idx": 30,
+            "length": 3,
+            "points": [
+                18,
+                13
+            ]
+        }
+    ],
+    "name": "map02_v1",
+    "points": [
+        {
+            "idx": 13,
+            "post_idx": 3
+        },
+        {
+            "idx": 14,
+            "post_idx": null
+        },
+        {
+            "idx": 15,
+            "post_idx": null
+        },
+        {
+            "idx": 16,
+            "post_idx": 4
+        },
+        {
+            "idx": 17,
+            "post_idx": 5
+        },
+        {
+            "idx": 18,
+            "post_idx": null
+        },
+        {
+            "idx": 19,
+            "post_idx": 6
+        },
+        {
+            "idx": 20,
+            "post_idx": null
+        },
+        {
+            "idx": 21,
+            "post_idx": null
+        },
+        {
+            "idx": 22,
+            "post_idx": null
+        },
+        {
+            "idx": 23,
+            "post_idx": null
+        },
+        {
+            "idx": 24,
+            "post_idx": null
+        }
+    ]
+}

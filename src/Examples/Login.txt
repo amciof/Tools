@@ -1,0 +1,35 @@
+{
+    "home": {
+        "idx": 13,
+        "post_idx": 3
+    },
+    "idx": "7768971a-3452-4461-8fb7-7a7ce6af5b04",
+    "in_game": true,
+    "name": "Pingas",
+    "rating": 0,
+    "town": {
+        "armor": 0,
+        "armor_capacity": 200,
+        "idx": 3,
+        "name": "town-one",
+        "player_idx": "7768971a-3452-4461-8fb7-7a7ce6af5b04",
+        "point_idx": 13,
+        "population": 3,
+        "population_capacity": 10,
+        "product": 60,
+        "product_capacity": 200,
+        "type": 1
+    },
+    "trains": [
+        {
+            "goods": 0,
+            "goods_capacity": 40,
+            "goods_type": null,
+            "idx": 1,
+            "line_idx": 13,
+            "player_idx": "7768971a-3452-4461-8fb7-7a7ce6af5b04",
+            "position": 0,
+            "speed": 0
+        }
+    ]
+}
