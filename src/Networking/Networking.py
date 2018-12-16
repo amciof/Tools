@@ -94,9 +94,18 @@ class Network:
 
 		return self.__getResponse()
 
-	def requestUpgrade(self):
+	def requestUpgrade(self, posts, trains):
+		action = b'\x04\x00\x00\x00'
+		data   = {
+			  'posts'  : posts
+			, 'trains' : trains
+		}
+		data   = json.dumps(data, separators=(',', ':')).encode('ascii')
+		length = len(data).to_bytes(Network.LENGTH_SIZE, 'little')
 
-		pass
+		self.__sendRequest(action + length + data)
+
+		return self.__getResponse()
 
 	def requestTurn(self):
 		action = b'\x05\x00\x00\x00'
@@ -205,14 +214,14 @@ if __name__ == '__main__':
 	map1   = net.requestMap(Options.LAYER_1)
 	player = net.requestPlayer()
 
-	with open('Examples/Login.txt', 'w') as login_info:
+	with open('../Watch/Login.txt', 'w') as login_info:
 		json.dump(login.msg, login_info, indent='    ')
 
-	with open('Examples/Map0.txt', 'w') as map0_info:
+	with open('../Watch/Map0.txt', 'w') as map0_info:
 		json.dump(map0.msg, map0_info, indent='    ')
 
-	with open('Examples/Map1.txt', 'w') as map1_info:
+	with open('../Watch/Map1.txt', 'w') as map1_info:
 		json.dump(map1.msg, map1_info, indent='    ')
 
-	with open('Examples/Player.txt', 'w') as player_info:
-		json.dump(map1.msg, player_info, indent='    ')
+	with open('../Watch/Player.txt', 'w') as player_info:
+		json.dump(player.msg, player_info, indent='    ')

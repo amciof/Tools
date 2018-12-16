@@ -1,8 +1,11 @@
+import sys
+sys.path.append('../')
+
 from PyQt5.QtGui  import QPainter, QColor, QPen, QFont, QBrush, QPolygonF, QTextOption
 from PyQt5.QtCore import QPointF, QRectF, Qt
 
-from SceneElements import BaseConsts, Base, Town, Market, Storage
-from SceneElements import Road, Speed, Train
+from Game.GameElements import BaseType, Base, Town, Market, Storage
+from Game.GameElements import Road, Speed, Train
 
 import networkx as nx
 import numpy    as np
@@ -84,28 +87,28 @@ class RenderInfo:
 class Scene:
 	#Resources
 	RESOURCES = {
-		BaseConsts.BASE      : initPolygon(6)
-		, BaseConsts.TOWN    : initPolygon(4)
-		, BaseConsts.MARKET  : initPolygon(5)
-		, BaseConsts.STORAGE : initPolygon(5)
+		BaseType.BASE      : initPolygon(6)
+		, BaseType.TOWN    : initPolygon(4)
+		, BaseType.MARKET  : initPolygon(3)
+		, BaseType.STORAGE : initPolygon(5)
 	}
 	ZERO_POINT = np.float32([+0.0, +0.0, +1.0])
 
 	#sizes
 	BASE_SIZES = {
-		  BaseConsts.BASE    : 40
-		, BaseConsts.TOWN    : 80
-		, BaseConsts.MARKET  : 60
-		, BaseConsts.STORAGE : 60
+		  BaseType.BASE    : 30
+		, BaseType.TOWN    : 50
+		, BaseType.MARKET  : 30
+		, BaseType.STORAGE : 30
 	}
-	TRAIN_SIZE = 25
+	TRAIN_SIZE = 13
 
 	#colors
 	BASE_COLORS = {
-		  BaseConsts.BASE    : QColor(200, 255, 200)
-		, BaseConsts.TOWN    : QColor(255,   0,   0)
-		, BaseConsts.MARKET  : QColor(  0, 255,   0)
-		, BaseConsts.STORAGE : QColor(  0,   0, 255)
+		  BaseType.BASE    : QColor(200, 255, 200)
+		, BaseType.TOWN    : QColor(255,   0,   0)
+		, BaseType.MARKET  : QColor(  0, 255,   0)
+		, BaseType.STORAGE : QColor(  0,   0, 255)
 	}
 	ROAD_COLOR  = QColor(  0,   0,   0)
 	TRAIN_COLOR = QColor(255,   0, 255)
@@ -164,7 +167,7 @@ class Scene:
 
 
 	def __initBasesInfo(self, bases, roads):
-		MAGIC_CONST = 3
+		MAGIC_CONST = 10
 
 		graph = nx.Graph()
 
@@ -209,7 +212,7 @@ class Scene:
 		self.trainsInfo = {}
 
 		for idx, train in trains.items():
-			data  = Scene.RESOURCES[BaseConsts.TOWN]
+			data  = Scene.RESOURCES[BaseType.TOWN]
 			model = modelMat(Scene.TRAIN_SIZE, Scene.TRAIN_SIZE, Scene.ZERO_POINT)
 			color = Scene.TRAIN_COLOR
 
@@ -243,7 +246,7 @@ class Scene:
 			pos     = np.array(info.model[:, 2])
 			pos[1] -= size / 2
 
-			data  = Scene.RESOURCES[BaseConsts.TOWN]
+			data  = Scene.RESOURCES[BaseType.TOWN]
 			model = modelMat(size * Scene.TEXT_X_SCALE, size * Scene.TEXT_Y_SCALE, pos)
 			color = Scene.LABEL_COLOR
 
@@ -265,7 +268,7 @@ class Scene:
 			pos += coef * vec
 
 			size  = Scene.ROAD_LABEL_SIZE
-			data  = Scene.RESOURCES[BaseConsts.TOWN]
+			data  = Scene.RESOURCES[BaseType.TOWN]
 			model = modelMat(size, size, pos)
 			color = Scene.LABEL_COLOR
 
@@ -312,10 +315,11 @@ class Scene:
 	def renderScene(self, context):
 		self.__drawRoads(context)
 		self.__drawBases(context)
-		self.__drawTrains(context)
 		
 		self.__drawBaseLabels(context)
 		self.__drawRoadLabels(context)
+
+		self.__drawTrains(context)
 	
 	#my little openGL
 	def __transform(self, model, point):

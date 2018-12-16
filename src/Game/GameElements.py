@@ -1,6 +1,6 @@
 
 #bases
-class BaseConsts:
+class BaseType:
 	BASE    = 0
 	TOWN    = 1
 	MARKET  = 2
@@ -37,7 +37,7 @@ class Base:
 class Town(Base):
 
 	def __init__(self, jsonTown):
-		Base.__init__(self, jsonTown['name'], jsonTown['point_idx'], BaseConsts.TOWN)
+		Base.__init__(self, jsonTown['name'], jsonTown['point_idx'], BaseType.TOWN)
 
 		self.idx = jsonTown['idx'] # +
 
@@ -50,9 +50,9 @@ class Town(Base):
 		self.populationCapacity = jsonTown['population_capacity'] # +
 		self.population         = jsonTown['population']          # +
 
-		# self.nextPrice     = jsonTown['next_level_price'] # -
-		# self.trainCooldown = jsonTown['train_cooldown']   # -
-		# self.level         = jsonTown['level']            # -
+		self.nextPrice     = jsonTown['next_level_price'] # +
+		#self.trainCooldown = jsonTown['train_cooldown']   # -
+		self.level         = jsonTown['level']            # +
 
 		self.playerIdx = jsonTown['player_idx'] # -
 
@@ -76,11 +76,21 @@ class Town(Base):
 
 	#logic
 	def update(self, jsonUpdate):
+		self.armor         = jsonUpdate['armor']
+		self.armorCapacity = jsonUpdate['armor_capacity']
 
-		self.product            = jsonUpdate['product']
-		self.productCapacity    = jsonUpdate['product_capacity']
+		self.product         = jsonUpdate['product']
+		self.productCapacity = jsonUpdate['product_capacity']
+
 		self.population         = jsonUpdate['population']
 		self.populationCapacity = jsonUpdate['population_capacity']
+
+		self.nextPrice     = jsonUpdate['next_level_price'] # +
+		self.level         = jsonUpdate['level']            # +
+
+		for event in jsonUpdate['events']:
+			self.addEvent(event)
+
 
 	def addEvent(self, event):
 
@@ -97,7 +107,7 @@ class Market(Base):
 			self
 			, jsonMarket['name']
 			, jsonMarket['point_idx']
-			, BaseConsts.MARKET
+			, BaseType.MARKET
 		)
 
 		self.product         = jsonMarket['product']          # +
@@ -106,8 +116,16 @@ class Market(Base):
 
 
 	def update(self, jsonUpdate):
+		print('Market: ', self.product)
+
 		self.product         = jsonUpdate['product']
 		self.productCapacity = jsonUpdate['product_capacity']
+
+		for event in jsonUpdate['events']:
+			self.addEvent(event)
+
+	def addEvent(self, event):
+		pass
 
 class Storage(Base):
 
@@ -116,7 +134,7 @@ class Storage(Base):
 			self
 			, jsonStorage['name']
 			, jsonStorage['point_idx']
-			, BaseConsts.STORAGE
+			, BaseType.STORAGE
 		)
 
 		self.armor         = jsonStorage['armor']          # +
@@ -124,7 +142,15 @@ class Storage(Base):
 		self.replenishment = jsonStorage['replenishment']  # +
 
 
-	def update(self, jsonBase):
+	def update(self, jsonUpdate):
+		print('Storage: ', self.armor)
+		self.armor         = jsonUpdate['armor']          # +
+		self.armorCapacity = jsonUpdate['armor_capacity'] # +
+
+		for event in jsonUpdate['events']:
+			self.addEvent(event)
+
+	def addEvent(self, event):
 		pass
 
 
@@ -161,17 +187,17 @@ class Train:
 		self.goodsType     = jsonTrain['goods_type']     # -
 		self.goods         = jsonTrain['goods']          # -
 
-		# self.fuelConsumption = jsonTrain['fuel_consumption'] # -
-		# self.fuelCapacity    = jsonTrain['fuel_capacity']    # -
-		# self.fuel            = jsonTrain['fuel']             # -
+		#self.fuelConsumption = jsonTrain['fuel_consumption'] # -
+		#self.fuelCapacity    = jsonTrain['fuel_capacity']    # -
+		#self.fuel            = jsonTrain['fuel']             # -
 
-		# self.level     = jsonTrain['level']            # -
-		# self.nextPrice = jsonTrain['next_level_price'] # -
+		self.level     = jsonTrain['level']            # +
+		self.nextPrice = jsonTrain['next_level_price'] # +
 
 		self.playerIdx = jsonTrain['player_idx'] # +
 		self.idx       = jsonTrain['idx']        # +
 
-		# self.cooldown = jsonTrain['cooldown'] # -
+		self.cooldown = jsonTrain['cooldown'] # -
 		self.position = jsonTrain['position'] # +
 		self.speed    = jsonTrain['speed']    # +
 
@@ -192,9 +218,6 @@ class Train:
 	def getPosition(self):
 		return self.position
 
-	def upgrade(self):
-		pass
-
 	def onCooldown(self):
 		return self.cooldown == 0
 
@@ -209,13 +232,18 @@ class Train:
 		self.position      = jsonUpdate['position']
 		self.speed         = jsonUpdate['speed']
 
+		self.level     = jsonUpdate['level']            # -
+		self.nextPrice = jsonUpdate['next_level_price'] # -
+
+		self.playerIdx = jsonUpdate['player_idx'] # +
+		self.idx       = jsonUpdate['idx']        # +
+
 		self.road  = additional['road']
 
 	def printStats(self):
 		print('Goods   : ', self.goods)
 		print('Position: ', self.position)
 		print('Speed   : ', self.speed)
-		print('Moved   : ', self.moved)
 		print('Road    : ', self.road.getIdx())
 		print('Length  : ', self.road.getLength())
 		print('UV      : ', self.road.getAdjacentIdx())

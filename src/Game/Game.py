@@ -1,32 +1,31 @@
-from PyQt5.QtGui  		import QPainter
 
+import sys
+sys.path.append('../')
+
+
+from PyQt5.QtGui     import QPainter
 from PyQt5.QtWidgets import QApplication, QWidget, QMainWindow, QLabel
 from PyQt5.QtGui     import QIcon, QPainter, QColor, QBrush
 from PyQt5.QtCore    import Qt
 
-from Networking		import Network, Options
-from Scene			import Scene
-from SceneElements	import BaseConsts, Base, Town, Market, Storage, Road, Speed, Train
-from Player			import Player
-from Strategy		import RandomStrategy, PrimitiveStrategy
+
+from Networking.Networking import Network, Options, Action
+
+from Render.Scene import Scene
+
+from Game.GameElements import BaseType, Base, Town, Market, Storage, Road, Speed, Train
+from Game.Player	   import Player
+
+from Strategy.SingleTrainStrategy import SingleTrainStrategy
 
 
 class Game(QWidget):
-
-	# Event Consts
-	EVENT_TIMER 		= 1
-	EVENT_MOUSE_PRESS   = 2
-	EVENT_MOUSE_RELEASE = 3
-	EVENT_MOUSE_MOVE    = 5
-	EVENT_MOUSE_WHEEL   = 31
-	EVENT_PAINT 		= 12
-
 	# Button Keys
 	BUTTON_LEFT  = 1
 	BUTTON_RIGHT = 2
 
 	# Game Consts
-	GAME_TICK  = 4000
+	GAME_TICK  = 500
 	FRAME_TICK = 16
 	WHEEL_SENSITIVITY = 1000
 
@@ -37,9 +36,9 @@ class Game(QWidget):
 
 		self.__initNetwork(serverAddr, portNum)
 
-		playerResp = self.net.requestLogin(playerName)
-		mapResp0   = self.net.requestMap(Options.LAYER_0)
-		mapResp1   = self.net.requestMap(Options.LAYER_1)
+		loginResp = self.net.requestLogin(playerName)
+		mapResp0  = self.net.requestMap(Options.LAYER_0)
+		mapResp1  = self.net.requestMap(Options.LAYER_1)
 
 		self.__initBases(mapResp0.msg, mapResp1.msg)
 
@@ -47,15 +46,16 @@ class Game(QWidget):
 
 		self.__initAdjacencyRel(mapResp0.msg)
 
-		self.__initTrains(playerResp.msg)
+		self.__initTrains(loginResp.msg)
 
 		self.__initScene()
 		
-		self.__initPlayer(playerResp.msg)
+		self.__initPlayer(loginResp.msg)
 
 		self.__initStateParams()
 
 		self.__initStrategy(mapResp1.msg)
+
 
 	def __initWindow(self, window):
 		QWidget.__init__(self, window)
@@ -71,11 +71,11 @@ class Game(QWidget):
 
 		for base in jsonMap1['posts']:
 			idx = base['point_idx']
-			if base['type'] == BaseConsts.TOWN:
+			if base['type'] == BaseType.TOWN:
 				self.bases[idx] = Town(base)
-			elif base['type'] == BaseConsts.MARKET:
+			elif base['type'] == BaseType.MARKET:
 				self.bases[idx] = Market(base)
-			elif base['type'] == BaseConsts.STORAGE:
+			elif base['type'] == BaseType.STORAGE:
 				self.bases[idx] = Storage(base)
 
 		for jsonPoint in jsonMap0['points']:
@@ -83,7 +83,7 @@ class Game(QWidget):
 			name = 'base ' + str(idx)
 
 			if not idx in self.bases:
-				self.bases[idx] = Base(name, idx, BaseConsts.BASE)
+				self.bases[idx] = Base(name, idx, BaseType.BASE)
 
 	def __initRoads(self, jsonMap):
 		self.roads = {}
@@ -130,15 +130,8 @@ class Game(QWidget):
 		self.lastY = None
 
 	def __initStrategy(self, jsonMap1):
-		town    = self.player.home
-		markets = []
-
-		for base in jsonMap1['posts']:
-			idx = base['point_idx']
-			if idx != town:
-				markets.append(idx)
-
-		self.strategy = PrimitiveStrategy(self, self.player.home, markets)
+		
+		self.strategy = SingleTrainStrategy(self, [])
 
 
 	#logic
@@ -193,9 +186,13 @@ class Game(QWidget):
 		self._updateState()
 
 	def _turn(self):
-		moves = self.strategy.getMoves()
-		for move in moves:
-			self.net.requestMove(move[0], move[1], move[2])
+		actions = self.strategy.getActions()
+		for action, data in actions.items():
+			for datum in data:
+				if action == Action.MOVE:
+					self.net.requestMove(datum[0], datum[1], datum[2])
+				elif action == Action.UPGRADE:
+					self.net.requestUpgrade(data['posts'], data['trains'])	
 
 	def _updateState(self):
 		self.net.requestTurn()
