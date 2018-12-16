@@ -18,8 +18,12 @@ class BaseLayout:
 class RoadLayout:
 	pass
 
+class Walker(PathWalker):
+	pass
 
-class MultipleTrainStrategy(Strategy):
+
+
+class ItJustWorks(Strategy):
 
 	def __init__(self, game, updateSequence):
 		Strategy.__init__(self, game)

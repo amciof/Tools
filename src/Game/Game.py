@@ -25,18 +25,17 @@ class Game(QWidget):
 	BUTTON_RIGHT = 2
 
 	# Game Consts
-	GAME_TICK  = 5000
-	FRAME_TICK = 16
+	GAME_TICK  = 300
+	FRAME_TICK = 18
 	WHEEL_SENSITIVITY = 1000
 
-
 	#init methods
-	def __init__(self, serverAddr, portNum, playerName, window):
+	def __init__(self, client, playerName, window):
 		self.__initWindow(window)
 
-		self.__initNetwork(serverAddr, portNum)
+		self.__initNetwork(client, playerName)
 
-		loginResp = self.net.requestLogin(playerName)
+		playerResp = self.net.requestPlayer()
 		mapResp0  = self.net.requestMap(Options.LAYER_0)
 		mapResp1  = self.net.requestMap(Options.LAYER_1)
 
@@ -46,11 +45,11 @@ class Game(QWidget):
 
 		self.__initAdjacencyRel(mapResp0.msg)
 
-		self.__initTrains(loginResp.msg)
+		self.__initTrains(playerResp.msg)
 
 		self.__initScene()
 		
-		self.__initPlayer(loginResp.msg)
+		self.__initPlayer(playerResp.msg)
 
 		self.__initStateParams()
 
@@ -62,9 +61,9 @@ class Game(QWidget):
 
 		self.setGeometry(0, 0, window.size().width(), window.size().height())
 
-	def __initNetwork(self, serverAddr, portNum):
-
-		self.net = Network(serverAddr, portNum)
+	def __initNetwork(self, client, playerName):
+		self.playerName = playerName
+		self.net = client
 
 	def __initBases(self, jsonMap0, jsonMap1):
 		self.bases = {}

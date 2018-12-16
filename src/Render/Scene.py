@@ -134,11 +134,11 @@ class Scene:
 	CAMERA_LIM_COEF = 0.1
 
 
-	BASE_LABEL_SIZE = 25
+	BASE_LABEL_SIZE = 30
 	ROAD_LABEL_SIZE = 15
 
 	TEXT_X_SCALE = 1.00
-	TEXT_Y_SCALE = 0.35
+	TEXT_Y_SCALE = 0.40
 
 	TEXT_REL = 0.70
 
@@ -347,7 +347,7 @@ class Scene:
 		self.__drawRoads(context)
 		self.__drawBases(context)
 		
-		#self.__drawBaseLabels(context)
+		self.__drawBaseLabels(context)
 		#self.__drawRoadLabels(context)
 
 		self.__drawTrains(context)

@@ -43,10 +43,6 @@ class SingleTrainStrategy(Strategy):
 	def getActions(self):
 		#in this strategy pathwalker is idle => it's in the town
 		self.resetActions()
-	
-		print(self.pathWalker.train.level)
-		print(self.town.population)
-		print()
 
 		if self.pathWalker.idle():
 			self.__tryUpgrade()

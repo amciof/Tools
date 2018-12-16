@@ -4,7 +4,6 @@ import socket
 import json
 
 
-
 class Action:
 	LOGIN   = 1
 	LOGOUT  = 2
@@ -12,6 +11,7 @@ class Action:
 	UPGRADE = 4
 	TURN    = 5
 	PLAYER  = 6
+	GAMES   = 7
 	MAP     = 10
 
 class Result:
@@ -27,6 +27,10 @@ class Options:
 	LAYER_0 = 0
 	LAYER_1 = 1
 
+class GameState:
+	INIT     = 1
+	RUN      = 2
+	FINISHED = 3
 
 
 class Response:
@@ -35,6 +39,7 @@ class Response:
 		self.result = msgDict['result']
 		self.length = msgDict['length']
 		self.msg    = msgDict['msg']
+
 
 class Network:
 
@@ -61,9 +66,22 @@ class Network:
 
 
 	#requests
-	def requestLogin(self, name):
+	def requestLogin(self
+		, name
+		, password
+		, game       = None
+		, numTurns   = -1
+		, numPlayers = +1
+	):
 		action = b'\x01\x00\x00\x00'
-		data   = {'name' : name}
+
+		data   = {}
+		data['name'] = name
+		if not game is None:
+			data['game'] = game
+		data['num_turns']   = numTurns
+		data['num_players'] = numPlayers
+
 		data   = json.dumps(data, separators=(',', ':')).encode('ascii')
 		length = len(data).to_bytes(Network.LENGTH_SIZE, 'little')
 
@@ -134,6 +152,10 @@ class Network:
 
 		return self.__getResponse()
 
+	def requestGames(self, option):
+
+		pass
+
 
 	#generalised request
 	def request(self, action, data):
@@ -149,7 +171,6 @@ class Network:
 		self.__sendRequest(action + length + data)
 
 		return self.__getResponse()
-
 
 	
 	#send whole msg(can be socket.sendall() instead)

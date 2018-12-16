@@ -4,6 +4,8 @@ from PyQt5.QtGui  import QIcon, QPainter, QColor, QBrush
 from PyQt5.QtCore import Qt
 import random
 
+from GUI.Application import App
+from Networking.Networking import Network
 from Game.Game import Game
 
 
@@ -11,31 +13,12 @@ SERVER_ADDR = 'wgforge-srv.wargaming.net'
 SERVER_PORT = 443
 PLAYER = 'A.D.'
 
-
-class App(QMainWindow):
-
-	def __init__(self, startX, startY, width, height):
-		super().__init__()
-
-		self.title = 'WG'
-
-		self.setGeometry(startX, startY, width, height)
-		self.setFixedSize(width, height)
-		self.setWindowTitle(self.title)
-
-		self.game = Game(SERVER_ADDR, SERVER_PORT, PLAYER, self)
-		self.game.start()
-		self.game.show()
-
-		self.show()
-
-
-	def initUI(self):
-		pass
-
-
 if __name__ == '__main__':
-	app = QApplication(sys.argv)
-	ex = App(200, 200, 1280, 720)
+	client = Network(SERVER_ADDR, SERVER_PORT)
+	app    = QApplication(sys.argv)
+	resp   = client.requestLogin(PLAYER, PLAYER)
+	ex     = App(client, PLAYER, 200, 200, 1280, 720)
 	sys.exit(app.exec_())
+
+	resp   = client.requestLogout()
 		
