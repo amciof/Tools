@@ -16,8 +16,8 @@ from Render.Scene import Scene
 from Game.GameElements import BaseType, Base, Town, Market, Storage, Road, Speed, Train
 from Game.Player	   import Player
 
-from Strategy.SingleTrainStrategy import SingleTrainStrategy
-
+from Strategy.SingleTrainStrategy    import SingleTrainStrategy
+from Strategy.MultipleTrainsStrategy import ItJustWorks
 
 class Game(QWidget):
 	# Button Keys
@@ -53,7 +53,7 @@ class Game(QWidget):
 
 		self.__initStateParams()
 
-		self.__initStrategy(mapResp1.msg)
+		self.__initStrategy()
 
 
 	def __initWindow(self, window):
@@ -128,9 +128,10 @@ class Game(QWidget):
 		self.lastX = None
 		self.lastY = None
 
-	def __initStrategy(self, jsonMap1):
+	def __initStrategy(self):
 		
-		self.strategy = SingleTrainStrategy(self, [])
+		self.strategy = ItJustWorks(self)
+		#self.strategy = SingleTrainStrategy(self, [])
 
 
 	#logic
@@ -187,8 +188,15 @@ class Game(QWidget):
 	def _turn(self):
 		actions = self.strategy.getActions()
 
-		for id, action in actions[Action.MOVE].items():
+		for idx, action in actions[Action.MOVE].items():
+			#print('##Train: ', idx)
+			#print('#Road:', self.trains[idx].getRoad().getIdx())
+			#print('#Pos: ', self.trains[idx].getPosition())
+			#print('#Request: ', action)
+
 			resp = self.net.requestMove(action[0], action[1], action[2])
+			#print('#Msg: ', resp.msg)
+			#print()
 		
 		self.net.requestUpgrade(
 			actions[Action.UPGRADE]['posts']

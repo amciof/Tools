@@ -37,7 +37,8 @@ class Shell:
 			command = input()
 
 			if command == Command.LOGIN:
-				self.__login()
+				if self.__login():
+					break;
 
 			elif command == Command.GAMES:
 				self.__games()
@@ -67,12 +68,16 @@ class Shell:
 			option = input()
 
 			if option == 'join':
-				self.__login_join(nickname, password)
-				break
+				if self.__login_join(nickname, password):
+					return True
+				else:
+					return False
 
 			elif option == 'new':
-				self.__login_new(nickname, password)
-				break
+				if self.__login_new(nickname, password):
+					return True
+				else:
+					return False
 
 			else:
 				print('Bad input. Try again')
@@ -90,6 +95,8 @@ class Shell:
 		app.exec_()
 
 		resp = self.client.requestLogout()
+
+		return True;
 
 	def __login_new(self, nickname, password):
 		print('Enter number of players: ')
@@ -119,6 +126,8 @@ class Shell:
 		app.exec_()
 
 		resp = self.client.requestLogout()
+
+		return True
 
 	
 	def __games(self):

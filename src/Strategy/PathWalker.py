@@ -71,8 +71,9 @@ class WalkerStateType:
 
 	WALKING_PATH = 1
 	WALKING_ROAD = 2
+	WALKING_BACK = 3
 
-	WAITING = 3
+	WAITING = 4
 
 	BROKEN  = -1
 
@@ -191,7 +192,17 @@ class WalkingPath(WalkerState):
 				return curr
 
 		return -1
+
+class WalkingBack(WalkingPath):
+	class Params(WalkingPath.Params):
 		
+		def __init__(self, path):
+			self.path = path
+
+	def __init__(self, params):
+		WalkingPath.__init__(self, params)
+
+		self.stateType = WalkerStateType.WALKING_BACK
 
 class WalkingRoad(WalkerState):
 
@@ -242,8 +253,8 @@ class Waiting(WalkerState):
 
 
 	def getAction(self):
-		if wait > 0:
-			wait  -= 1
+		if self.wait > 0:
+			self.wait  -= 1
 			action = (self.train.getRoad().getIdx(), Speed.STOP, self.train.getIdx())
 
 		else:

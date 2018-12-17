@@ -288,11 +288,13 @@ class Scene:
 			pos += coef * vec
 
 			size  = Scene.ROAD_LABEL_SIZE
+
 			data  = Scene.RESOURCES[BaseType.TOWN]
 			model = modelMat(size, size, pos)
 			color = Scene.LABEL_COLOR
+			buffer = self.polyBuffers[BaseType.TOWN]
 
-			self.roadsLabelsInfo[idx] = RenderInfo(data, model, color)
+			self.roadsLabelsInfo[idx] = RenderInfo(data, model, color, buffer)
 
 
 	def __initBuffers(self):
@@ -348,7 +350,7 @@ class Scene:
 		self.__drawBases(context)
 		
 		self.__drawBaseLabels(context)
-		#self.__drawRoadLabels(context)
+		self.__drawRoadLabels(context)
 
 		self.__drawTrains(context)
 	

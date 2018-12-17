@@ -216,24 +216,25 @@ class Train:
 		return self.position
 
 	def onCooldown(self):
-		return self.cooldown == 0
+		return self.cooldown > 0
 
 	def full(self):
 		return self.goods == self.goodsCapacity
 
 
 	def update(self, jsonUpdate, additional):
+		self.cooldown      = jsonUpdate['cooldown']
 		self.goods         = jsonUpdate['goods']
 		self.goodsCapacity = jsonUpdate['goods_capacity']
 		self.goodsType     = jsonUpdate['goods_type']
 		self.position      = jsonUpdate['position']
 		self.speed         = jsonUpdate['speed']
 
-		self.level     = jsonUpdate['level']            # -
-		self.nextPrice = jsonUpdate['next_level_price'] # -
+		self.level     = jsonUpdate['level']           
+		self.nextPrice = jsonUpdate['next_level_price']
 
-		self.playerIdx = jsonUpdate['player_idx'] # +
-		self.idx       = jsonUpdate['idx']        # +
+		self.playerIdx = jsonUpdate['player_idx']
+		self.idx       = jsonUpdate['idx']
 
 		self.road  = additional['road']
 

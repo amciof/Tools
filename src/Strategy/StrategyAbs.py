@@ -19,7 +19,7 @@ class Strategy:
 		self.actions = {}
 
 		self.town    = self.game.bases[self.game.player.home]
-		self.townIdx = self.towm.getBaseIdx()
+		self.townIdx = self.town.getBaseIdx()
 
 		self.markets = [
 			base
@@ -74,6 +74,7 @@ class Strategy:
 				if newDist < dist[to]:
 					dist[to] = newDist
 					pred[to] = curr
+
 					hq.heappush(pqueue, (dist[to], to))
 
 		return dist, pred
