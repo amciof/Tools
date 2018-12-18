@@ -221,6 +221,9 @@ class Train:
 	def full(self):
 		return self.goods == self.goodsCapacity
 
+	def fullThreshold(self, coef):
+		return self.goods >= self.goodsCapacity * coef
+
 
 	def update(self, jsonUpdate, additional):
 		self.cooldown      = jsonUpdate['cooldown']

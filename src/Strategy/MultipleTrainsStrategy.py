@@ -6,6 +6,7 @@ from Strategy.PathWalker import Path\
 	, PathWalker\
 	, WalkerStateType\
 	, WalkingPath\
+	, WalkingBack\
 	, WalkingRoad\
 	, Waiting\
 	, Broken
@@ -14,9 +15,34 @@ from Game.GameElements import BaseType, Speed
 
 from Networking.Networking import Action
 
-TEST = 1
+
+class Resource:
+	NONE    = 0
+	PRODUCT = 1
+	ARMOR   = 2
+
+class UltraSoldier(PathWalker):
+
+	def __init__(self, owner, train):
+		PathWalker.__init__(self, owner, train)
+
+		self.resource = Resource.NONE
+
+	def getResource(self):
+
+		return self.resource
+
+	def setResource(self):
+
+		return self.resource
+
 
 class ItJustWorks(Strategy):
+	#or not
+
+	THRESHOLD = 0.75
+
+	SPLIT = 0.7
 
 	#inits
 	def __init__(self, game):
@@ -30,6 +56,9 @@ class ItJustWorks(Strategy):
 
 		self.__initWalkCycles()
 
+		self.__initSplitParams()
+		
+
 	def __initUpdateSequence(self):
 
 		self.updateSequence = [TOWN, TRAIN, TOWN, TRAIN]
@@ -42,7 +71,7 @@ class ItJustWorks(Strategy):
 
 	def __initPathWalkers(self):
 		self.pathWalkers = {
-			idx : PathWalker(self, train) for idx, train in self.game.trains.items()
+			idx : UltraSoldier(self, train) for idx, train in self.game.trains.items()
 		}
 
 	def __initWalkCycles(self):
@@ -95,6 +124,12 @@ class ItJustWorks(Strategy):
 		for first, second, cache in self.storagesCycle:
 			print('(%i; %i)' % (first, second))
 		print()
+
+	def __initSplitParams(self):
+		whole = len(self.pathWalkers)
+
+		self.product = int(whole * ItJustWorks.SPLIT)
+		self.armor   = whole - self.product
 
 
 	#utils
@@ -212,13 +247,37 @@ class ItJustWorks(Strategy):
 				and not walker.train.onCooldown():
 
 				wait = 0
-				for idx, walker in idle.items():
+				for idx, walker in self.pathWalkers.items():
 					self.__setOnWalkCycle(walker, self.marketsCycle)
 					walker.pushState(Waiting, Waiting.Params(wait))
-					wait += 1
+					wait += 5
 
 	def __processFull(self):
-		pass
+		for idx, walker in self.pathWalkers.items():
+			if not walker.peekState().getType() == WalkerStateType.WALKING_BACK\
+				\
+			   and walker.train.fullThreshold(ItJustWorks.THRESHOLD):
+
+				road = walker.train.getRoad()
+				pos  = walker.train.getPosition()
+
+				idx1, idx2 = road.getAdjacentIdx()
+				if pos == 0:
+					base = idx1
+				elif pos == road.getLength():
+					base = idx2
+				else:
+					base = None
+
+				if base is None:
+					print('[DEBUG] Train %i is full and not in base' % (idx))
+					print()
+					continue
+
+				path = self.noIgnore[base][self.townIdx]
+
+				walker.flushStates()
+				walker.pushState(WalkingBack, WalkingBack.Params(path))
 
 	def __tryUpgrade(self):
 		pass

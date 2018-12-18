@@ -25,7 +25,7 @@ class Game(QWidget):
 	BUTTON_RIGHT = 2
 
 	# Game Consts
-	GAME_TICK  = 300
+	GAME_TICK  = 1000
 	FRAME_TICK = 18
 	WHEEL_SENSITIVITY = 1000
 

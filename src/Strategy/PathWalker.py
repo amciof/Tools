@@ -199,8 +199,8 @@ class WalkingBack(WalkingPath):
 		def __init__(self, path):
 			self.path = path
 
-	def __init__(self, params):
-		WalkingPath.__init__(self, params)
+	def __init__(self, owner, train, params):
+		WalkingPath.__init__(self, owner, train, params)
 
 		self.stateType = WalkerStateType.WALKING_BACK
 

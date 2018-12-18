@@ -3,6 +3,9 @@ import io
 import socket
 import json
 
+from threading import Thread
+from queue     import Queue
+
 
 class Action:
 	LOGIN   = 1
@@ -40,6 +43,10 @@ class Response:
 		self.length = msgDict['length']
 		self.msg    = msgDict['msg']
 
+#TODO
+#all requests return token
+#accepts outQueue
+#puts to the outQueue tuple(token, response)
 
 class Network:
 
@@ -49,9 +56,13 @@ class Network:
 	LENGTH_SIZE = 4
 	ACTION_SIZE = 4
 
+	#for queue
+	RESPONSE  = 0
+	TERMINATE = 1
+
 
 	def __init__(self, address, port):
-
+		self.token  = 0
 		self.sock   = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.buffer = io.BytesIO()
 
