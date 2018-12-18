@@ -196,6 +196,7 @@ class Game(QWidget):
 
 	def timerEvent(self, event):
 		if event.timerId() == self.gameTickID:
+			self.shouldTurn = True
 			self._gameTick()
 
 		elif event.timerId() == self.frameTickID:
@@ -204,6 +205,7 @@ class Game(QWidget):
 		elif event.timerId() == self.pollTickID:
 			self.__tryPollSecondary()
 			self.__tryPollPrimary()
+
 			if self.shouldTurn:
 				self._gameTick()
 
@@ -230,22 +232,25 @@ class Game(QWidget):
 		while not self.secondary.empty():
 			token, resp = self.secondary.get()
 
-			action = resp.action
-			if action == Action.MOVE:
-				pass
-				#print('Move action accepted')
-			elif action == Action.TURN:
-				pass
-				#print('turn action accepted')
-			elif action == Action.UPGRADE:
-				pass
-				#print('upgrade action accepted')
+			if token in self.secondaryExpect:
+				self.secondaryExpect.remove(token)
+
+				action = resp.action
+				if action == Action.MOVE:
+					print('Move: ', token)
+					#print('Move action accepted')
+				elif action == Action.TURN:
+					pass
+					#print('turn action accepted')
+				elif action == Action.UPGRADE:
+					pass
+					#print('upgrade action accepted')
 
 
 	#called from timer
 	def _gameTick(self):
-		if len(self.primaryExpect) != 0 and len(self.secondaryExpect) != 0:
-			self.shouldTurn = True
+		if len(self.primaryExpect) != 0 or len(self.secondaryExpect) != 0:
+			return
 
 		self.shouldTurn = False
 

@@ -194,7 +194,7 @@ class Network(Thread):
 
 		return token
 
-	def requestGames(self):
+	def requestGames(self, outQueue):
 		token   = self.__getToken()
 		request = Request(token, Action.GAMES, None)
 		self.taskQueue.put((Network.REQUEST, outQueue, request))
