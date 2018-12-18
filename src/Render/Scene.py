@@ -348,7 +348,7 @@ class Scene:
 		self.__drawRoads(context)
 		self.__drawBases(context)
 		
-		#self.__drawBaseLabels(context)
+		self.__drawBaseLabels(context)
 		#self.__drawRoadLabels(context)
 
 		self.__drawTrains(context)

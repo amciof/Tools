@@ -42,6 +42,22 @@ class UltraSoldier(PathWalker):
 		return token
 
 
+STANDS = 0
+INTENT = 1
+
+class BaseLayout:
+	
+	def __init__(self, base):
+		self.layout = {}
+		self.idx    = base.getBaseIdx()
+
+class RoadLayout:
+		
+	def __init__(self, road):
+		#layout -> [list of dicts, {dict -> key: train idx, value: STANDS/INTENT}]
+		self.layout = [{} for i in range(road.getLength() + 1)]
+
+
 class ItJustWorks(Strategy):
 	#or not
 

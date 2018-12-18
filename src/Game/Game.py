@@ -25,8 +25,8 @@ class Game(QWidget):
 	BUTTON_RIGHT = 2
 
 	# Game Consts
-	GAME_TICK  = 5000
-	FRAME_TICK = 17
+	GAME_TICK  = 3500
+	FRAME_TICK = 18
 
 	POLL_TICK  = 750
 	

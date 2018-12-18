@@ -35,7 +35,7 @@ class Shell:
 
 
 	def run(self):
-		print("PEPE SOFT")
+		print("PEPE SOFT©                         ")
 		print("           .--._.--.               ")
 		print("          ( O     O )              ")
 		print("          /   . .   \              ")
