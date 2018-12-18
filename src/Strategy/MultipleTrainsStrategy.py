@@ -42,28 +42,12 @@ class UltraSoldier(PathWalker):
 		return token
 
 
-STANDS = 0
-INTENT = 1
-
-class BaseLayout:
-	
-	def __init__(self, base):
-		self.layout = {}
-		self.idx    = base.getBaseIdx()
-
-class RoadLayout:
-		
-	def __init__(self, road):
-		#layout -> [list of dicts, {dict -> key: train idx, value: STANDS/INTENT}]
-		self.layout = [{} for i in range(road.getLength() + 1)]
-
-
 class ItJustWorks(Strategy):
 	#or not
 
 	THRESHOLD = 0.75
 
-	SPLIT = 0.75
+	SPLIT = 0.8
 
 	#inits
 	def __init__(self, game):
@@ -241,9 +225,6 @@ class ItJustWorks(Strategy):
 
 			pathWalker.pushState(WalkingPath, WalkingPath.Params(path))
 
-	def __getConflictsMap(self):
-		pass
-
 
 	#get Actions
 	def getActions(self):
@@ -261,8 +242,6 @@ class ItJustWorks(Strategy):
 
 		self.__getActions()
 		
-		self.__resolveConflicts()
-
 		return self.actions
 
 
@@ -390,18 +369,4 @@ class ItJustWorks(Strategy):
 	def __getActions(self):
 		for idx, walker in self.pathWalkers.items():
 			self.actions[Action.MOVE][idx] = walker.getAction()
-
-	def __resolveConflicts(self):
-		pass
-
-	
-	#????
-	def __findPath(self):
-		pass
-
-	def __findPathIgnoreVertexes(self):
-		pass
-
-	def __findPathIgnoreEdges(self):
-		pass
 
