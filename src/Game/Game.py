@@ -210,25 +210,22 @@ class Game(QWidget):
 				self._gameTick()
 
 			
-	#inner methods
+	#polling methods
 	def __tryPollPrimary(self):
 		#MAP
-		#print('polling requests...')
 		while not self.primary.empty():
 			token, resp = self.primary.get()
 
-			#print('token received: ', token)
 			if token in self.primaryExpect:
 				self.primaryExpect.remove(token)
 
 				action = resp.action
 				if action == Action.MAP:
-					#print('Map received')
+					print('Map: ', token)
 					self._updateState(resp)
 
 	def __tryPollSecondary(self):
 		#MOVE TURN UPGRADE
-
 		while not self.secondary.empty():
 			token, resp = self.secondary.get()
 
@@ -238,13 +235,10 @@ class Game(QWidget):
 				action = resp.action
 				if action == Action.MOVE:
 					print('Move: ', token)
-					#print('Move action accepted')
 				elif action == Action.TURN:
-					pass
-					#print('turn action accepted')
+					print('Turn: ', token)
 				elif action == Action.UPGRADE:
-					pass
-					#print('upgrade action accepted')
+					print('Upgrade: ', token)
 
 
 	#called from timer

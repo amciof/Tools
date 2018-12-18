@@ -52,11 +52,6 @@ class Request:
 		self.data   = data
 
 
-#TODO
-#all requests return token
-#accepts outQueue
-#puts to the outQueue tuple(token, response)
-
 class Network(Thread):
 
 	CHUNK_SIZE  = 4096
@@ -278,7 +273,6 @@ class Network(Thread):
 		self.buffer.seek(0, io.SEEK_SET)
 
 		return msg
-
 
 
 if __name__ == '__main__':
