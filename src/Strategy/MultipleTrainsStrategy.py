@@ -16,7 +16,7 @@ from Game.GameElements import BaseType, Speed
 from Networking.Networking import Action
 
 
-class Resource:
+class Token:
 	NONE    = 0
 	PRODUCT = 1
 	ARMOR   = 2
@@ -26,15 +26,20 @@ class UltraSoldier(PathWalker):
 	def __init__(self, owner, train):
 		PathWalker.__init__(self, owner, train)
 
-		self.resource = Resource.NONE
+		self.token = Token.NONE
 
-	def getResource(self):
+	def getToken(self):
 
-		return self.resource
+		return self.token
 
-	def setResource(self):
+	def setToken(self, token):
 
-		return self.resource
+		self.token = token
+
+	def withdrawToken(self):
+		token = self.token
+		self.token = Token.NONE
+		return token
 
 
 class ItJustWorks(Strategy):
@@ -42,7 +47,7 @@ class ItJustWorks(Strategy):
 
 	THRESHOLD = 0.75
 
-	SPLIT = 0.7
+	SPLIT = 0.75
 
 	#inits
 	def __init__(self, game):
@@ -61,7 +66,7 @@ class ItJustWorks(Strategy):
 
 	def __initUpdateSequence(self):
 
-		self.updateSequence = [TOWN, TRAIN, TOWN, TRAIN]
+		self.updateSequence = [(TOWN, 3), (TRAIN, 3), (TOWN, 2), (TRAIN, 2)]
 
 	def __initCaches(self):
 		self.toMarkets  = {}
@@ -128,8 +133,13 @@ class ItJustWorks(Strategy):
 	def __initSplitParams(self):
 		whole = len(self.pathWalkers)
 
-		self.product = int(whole * ItJustWorks.SPLIT)
-		self.armor   = whole - self.product
+		self.productTokens = int(whole * ItJustWorks.SPLIT)
+		self.armorTokens   = whole - self.productTokens
+
+		print('###Tokens###')
+		print('Armor  : ', self.armorTokens)
+		print('Product: ', self.productTokens)
+		print()
 
 
 	#utils
@@ -221,7 +231,11 @@ class ItJustWorks(Strategy):
 
 	#get Actions
 	def getActions(self):
+		print('Entering getActions')
+
 		self.resetActions()
+
+		self.__tryUpgrade()
 
 		self.__resetCrashed()
 		
@@ -241,21 +255,67 @@ class ItJustWorks(Strategy):
 			if walker.train.onCooldown():
 				walker.flushStates()
 
-	def __processIdle(self):
-		for idx, walker in self.pathWalkers.items():
-			if walker.peekState().getType() == WalkerStateType.IDLE\
-				and not walker.train.onCooldown():
+				#return token
+				print('###Train crashed###')
+				print('##getting back its token')
 
-				wait = 0
-				for idx, walker in self.pathWalkers.items():
-					self.__setOnWalkCycle(walker, self.marketsCycle)
+				token = walker.withdrawToken()
+
+				print('#token : ', token)
+				print()
+
+				if token == Token.ARMOR:
+					self.armorTokens += 1
+				elif token == Token.PRODUCT:
+					self.productTokens += 1
+
+	def __processIdle(self):
+		wait = 0
+		for idx, walker in self.pathWalkers.items():
+			if walker.idle()\
+				and not walker.train.onCooldown():
+					#return token
+					print('###Train idle###')
+					print('##getting back its token')
+
+					token = walker.withdrawToken()
+
+					print('#token : ', token)
+					print()
+
+					if token == Token.ARMOR:
+						self.armorTokens += 1
+					elif token == Token.PRODUCT:
+						self.productTokens += 1
+
+					#obtain 
+					print('###Tokens available###')
+					print('##Armor  : ', self.armorTokens)
+					print('##Product: ', self.productTokens)
+					if self.armorTokens >= self.productTokens:
+						print('#Armor chosen')
+						walkCycle = self.storagesCycle
+						token     = Token.ARMOR
+
+						self.armorTokens -= 1
+					else:
+						print('#Product chosen')
+						walkCycle = self.marketsCycle
+						token     = Token.PRODUCT
+
+						self.productTokens -= 1
+					print()
+
+					#prepare for walking
+					self.__setOnWalkCycle(walker, walkCycle)
+					walker.setToken(token)
 					walker.pushState(Waiting, Waiting.Params(wait))
+
 					wait += 5
 
 	def __processFull(self):
 		for idx, walker in self.pathWalkers.items():
-			if not walker.peekState().getType() == WalkerStateType.WALKING_BACK\
-				\
+			if not walker.back()\
 			   and walker.train.fullThreshold(ItJustWorks.THRESHOLD):
 
 				road = walker.train.getRoad()
@@ -280,7 +340,36 @@ class ItJustWorks(Strategy):
 				walker.pushState(WalkingBack, WalkingBack.Params(path))
 
 	def __tryUpgrade(self):
-		pass
+		if len(self.updateSequence) != 0:
+			if self.updateSequence[-1] == TRAIN:
+				allUpgraded = True
+				for idx, walker in self.pathWalkers.items():
+					if walker.idle():
+						idx     = self.pathWalker.train.getIdx()
+						level   = self.pathWalker.train.level
+						price   = self.pathWalker.train.nextPrice
+
+						if level >= self.updateSequence[-1][1]:
+							continue
+
+						onStock = self.town.armor
+						if onStock >= price:
+							self.actions[Action.UPGRADE]['trains'].append(idx)
+							self.town.armor -= price
+						else:
+							allUpgraded = False
+
+				if allUpgraded:
+					del self.updateSequence[-1]
+
+			elif self.updateSequence[-1] == TOWN:
+				idx     = self.town.getBaseIdx()
+				level   = self.town.level
+				price   = self.town.nextPrice
+				onStock = self.town.armor
+				if onStock >= price:
+					self.actions[Action.UPGRADE]['posts'].append(idx)
+					del self.updateSequence[-1]
 
 	def __getActions(self):
 		for idx, walker in self.pathWalkers.items():

@@ -315,6 +315,19 @@ class PathWalker:
 
 
 	def idle(self):
-
 		return self.stateStack[-1].getType() == WalkerStateType.IDLE
-	
+
+	def path(self):
+		return self.stateStack[-1].getType() == WalkerStateType.WALKING_PATH
+
+	def back(self):
+		return self.stateStack[-1].getType() == WalkerStateType.WALKING_BACK
+
+	def road(self):
+		return self.stateStack[-1].getType() == WalkerStateType.WALKING_ROAD
+
+	def broken(self):
+		return self.stateStack[-1].getType() == WalkerStateType.BROKEN
+
+	def waiting(self):
+		return self.stateStack[-1].getType() == WalkerStateType.WAITING

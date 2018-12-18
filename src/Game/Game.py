@@ -186,6 +186,7 @@ class Game(QWidget):
 		self._updateState()
 
 	def _turn(self):
+		print('======Turn======')
 		actions = self.strategy.getActions()
 
 		for idx, action in actions[Action.MOVE].items():
@@ -202,6 +203,8 @@ class Game(QWidget):
 			actions[Action.UPGRADE]['posts']
 			, actions[Action.UPGRADE]['trains']
 		)
+		print('======End turn======')
+		print()
 
 	def _updateState(self):
 		self.net.requestTurn()
