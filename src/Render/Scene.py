@@ -342,15 +342,14 @@ class Scene:
 		trainMod[0][2] = baseMod[0][2] + coef * roadVec[0]
 		trainMod[1][2] = baseMod[1][2] + coef * roadVec[1]
 
-
 	##render
 	#Labels are too heavy
 	def renderScene(self, context):
 		self.__drawRoads(context)
 		self.__drawBases(context)
 		
-		self.__drawBaseLabels(context)
-		self.__drawRoadLabels(context)
+		#self.__drawBaseLabels(context)
+		#self.__drawRoadLabels(context)
 
 		self.__drawTrains(context)
 	

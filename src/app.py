@@ -1,9 +1,10 @@
-
 import sys
+import random
+from queue import Queue
+
 from PyQt5.QtWidgets import QApplication, QWidget, QMainWindow, QLabel
 from PyQt5.QtGui  import QIcon, QPainter, QColor, QBrush
 from PyQt5.QtCore import Qt
-import random
 
 from GUI.Application import App
 from Networking.Networking import Network
@@ -28,10 +29,25 @@ class Shell:
 	}
 
 	def __init__(self):
+		self.outQueue = Queue()
+		self.client   = Network(SERVER_ADDR, SERVER_PORT)
+		self.client.start()
 
-		self.client  = Network(SERVER_ADDR, SERVER_PORT)
 
 	def run(self):
+		print("PEPE SOFT")
+		print("           .--._.--.               ")
+		print("          ( O     O )              ")
+		print("          /   . .   \              ")
+		print("         .`._______.'.             ")
+		print("        /(           )\            ")
+		print("      _/  \  \   /  /  \_          ")
+		print("   .~   `  \  \ /  /  '   ~.       ")
+		print("  {    -.   \  V  /   .-    }      ")
+		print("_ _`.    \  |  |  |  /    .'_ _    ")
+		print(">_________} |  |  | {_________<    ")
+		print()
+
 		while True:
 			print('Enter command')
 			command = input()
@@ -52,6 +68,8 @@ class Shell:
 			else:
 				self.__invalid()
 			print()
+
+		self.client.terminate()
 
 
 	#commands
@@ -88,13 +106,15 @@ class Shell:
 
 		game = input()
 
-		resp = self.client.requestLogin(nickname, password, game)
+		token = self.client.requestLogin(self.outQueue, nickname, password, game)
+		token, resp = self.outQueue.get(True)
 
 		app = QApplication(sys.argv)
 		ex  = App(self.client, nickname, 200, 200, 1280, 720)
 		app.exec_()
 
-		resp = self.client.requestLogout()
+		token = self.client.requestLogout(self.outQueue)
+		token, resp = self.outQueue.get(True)
 
 		return True;
 
@@ -119,20 +139,24 @@ class Shell:
 			num_turns = -1
 
 
-		resp = self.client.requestLogin(nickname, password, None, num_turns, num_players)
+		token = self.client.requestLogin(self.outQueue, nickname, password, None, num_turns, num_players)
+		token, resp = self.outQueue.get(True)
 
 		app = QApplication(sys.argv)
 		ex  = App(self.client, nickname, 200, 200, 1280, 720)
 		app.exec_()
 
-		resp = self.client.requestLogout()
+		token = self.client.requestLogout(self.outQueue)
+		token, resp = self.outQueue.get(True)
 
 		return True
 
 	
 	def __games(self):
 		print('**Available games**')
-		resp = self.client.requestGames()
+		token = self.client.requestGames(self.outQueue)
+		token, resp = self.outQueue.get(True)
+
 		print('[RESULT: %i]' % (resp.result))
 		for game in resp.msg['games']:
 			print('Name   : ', game['name'])

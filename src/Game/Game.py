@@ -1,13 +1,12 @@
-
 import sys
 sys.path.append('../')
 
+from queue import Queue
 
 from PyQt5.QtGui     import QPainter
 from PyQt5.QtWidgets import QApplication, QWidget, QMainWindow, QLabel
 from PyQt5.QtGui     import QIcon, QPainter, QColor, QBrush
 from PyQt5.QtCore    import Qt
-
 
 from Networking.Networking import Network, Options, Action
 
@@ -19,25 +18,38 @@ from Game.Player	   import Player
 from Strategy.SingleTrainStrategy    import SingleTrainStrategy
 from Strategy.MultipleTrainsStrategy import ItJustWorks
 
+
 class Game(QWidget):
 	# Button Keys
 	BUTTON_LEFT  = 1
 	BUTTON_RIGHT = 2
 
 	# Game Consts
-	GAME_TICK  = 1000
-	FRAME_TICK = 18
+	GAME_TICK  = 5000
+	FRAME_TICK = 17
+
+	POLL_TICK  = 1000
+	
 	WHEEL_SENSITIVITY = 1000
 
 	#init methods
 	def __init__(self, client, playerName, window):
 		self.__initWindow(window)
 
+		self.__initQueues()
+
 		self.__initNetwork(client, playerName)
 
-		playerResp = self.net.requestPlayer()
-		mapResp0  = self.net.requestMap(Options.LAYER_0)
-		mapResp1  = self.net.requestMap(Options.LAYER_1)
+
+		self.net.requestPlayer(self.primary)
+		token, playerResp = self.primary.get(True)
+
+		self.net.requestMap(self.primary, Options.LAYER_0)
+		token, mapResp0 = self.primary.get(True)
+
+		self.net.requestMap(self.primary, Options.LAYER_1)
+		token, mapResp1 = self.primary.get(True)
+
 
 		self.__initBases(mapResp0.msg, mapResp1.msg)
 
@@ -131,13 +143,20 @@ class Game(QWidget):
 	def __initStrategy(self):
 		
 		self.strategy = ItJustWorks(self)
-		#self.strategy = SingleTrainStrategy(self, [])
+
+	def __initQueues(self):
+		self.primary   = Queue()
+		self.secondary = Queue()
+
+		self.primaryExpect   = set()
+		self.secondaryExpect = set()
 
 
 	#logic
 	def start(self):
 		self.gameTickID  = self.startTimer(Game.GAME_TICK)
 		self.frameTickID = self.startTimer(Game.FRAME_TICK)
+		self.pollTickID  = self.startTimer(Game.POLL_TICK)
 		self._turn()
 
 
@@ -176,40 +195,82 @@ class Game(QWidget):
 	def timerEvent(self, event):
 		if event.timerId() == self.gameTickID:
 			self._gameTick()
+
 		elif event.timerId() == self.frameTickID:
 			self.update()
 
+		elif event.timerId() == self.pollTickID:
+			#self.__tryPollSecondary()
+			self.__tryPollPrimary()
 
+			
 	#inner methods
-	def _gameTick(self):
-		self._turn()
-		self._updateState()
+	def __tryPollPrimary(self):
+		#MAP
+		#print('polling requests...')
+		while not self.primary.empty():
+			token, resp = self.primary.get()
 
+			#print('token received: ', token)
+			if token in self.primaryExpect:
+				self.primaryExpect.remove(token)
+
+				action = resp.action
+				if action == Action.MAP:
+					#print('Map received')
+					self._updateState(resp)
+
+	def __tryPollSecondary(self):
+		#MOVE TURN UPGRADE
+
+		while not self.secondary.empty():
+			token, resp = self.secondary.get()
+
+			action = resp.action
+			if action == Action.MOVE:
+				pass
+				#print('Move action accepted')
+			elif action == Action.TURN:
+				pass
+				#print('turn action accepted')
+			elif action == Action.UPGRADE:
+				pass
+				#print('upgrade action accepted')
+
+
+	#called from timer
+	def _gameTick(self):
+		print('$$$ Game tick $$$')
+		token = self.net.requestTurn(self.secondary)
+		print('turn token is ', token)
+		self.secondaryExpect.add(token)
+
+		token = self.net.requestMap(self.primary, Options.LAYER_1)
+		print('map token is ', token)
+		self.primaryExpect.add(token)
+
+		self._turn()
+
+	#called from gametick & start
 	def _turn(self):
-		print('======Turn======')
 		actions = self.strategy.getActions()
 
 		for idx, action in actions[Action.MOVE].items():
-			#print('##Train: ', idx)
-			#print('#Road:', self.trains[idx].getRoad().getIdx())
-			#print('#Pos: ', self.trains[idx].getPosition())
-			#print('#Request: ', action)
-
-			resp = self.net.requestMove(action[0], action[1], action[2])
-			#print('#Msg: ', resp.msg)
-			#print()
+			token = self.net.requestMove(self.secondary, action[0], action[1], action[2])
+			print('train %i move token is %i' % (idx, token))
+			self.secondaryExpect.add(token)
 		
-		self.net.requestUpgrade(
-			actions[Action.UPGRADE]['posts']
+		token = self.net.requestUpgrade(
+			self.secondary
+			, actions[Action.UPGRADE]['posts']
 			, actions[Action.UPGRADE]['trains']
 		)
-		print('======End turn======')
-		print()
+		print('upgrade token is ', token)
+		self.secondaryExpect.add(token)
 
-	def _updateState(self):
-		self.net.requestTurn()
-		mapLayer1 = self.net.requestMap(Options.LAYER_1)
 
+	#called from pollRequests
+	def _updateState(self, mapLayer1):
 		self._updateBases(mapLayer1)
 		self._updateTrains(mapLayer1)
 

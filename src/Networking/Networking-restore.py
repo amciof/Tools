@@ -38,26 +38,17 @@ class GameState:
 
 class Response:
 
-	def __init__(self, action, msgDict):
-		self.action = action
+	def __init__(self, msgDict):
 		self.result = msgDict['result']
 		self.length = msgDict['length']
 		self.msg    = msgDict['msg']
-
-class Request:
-
-	def __init__(self, token, action, data):
-		self.token  = token
-		self.action = action
-		self.data   = data
-
 
 #TODO
 #all requests return token
 #accepts outQueue
 #puts to the outQueue tuple(token, response)
 
-class Network(Thread):
+class Network:
 
 	CHUNK_SIZE  = 4096
 
@@ -66,63 +57,36 @@ class Network(Thread):
 	ACTION_SIZE = 4
 
 	#for queue
-	REQUEST   = 0
+	RESPONSE  = 0
 	TERMINATE = 1
 
 
 	def __init__(self, address, port):
-		Thread.__init__(self)
-
 		self.token  = 0
 		self.sock   = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.buffer = io.BytesIO()
-		self.taskQueue = Queue()
 
 		try:
 			self.sock.connect((address, port))
 		except RuntimeError as re:
 			print(re.msg)
-
-		self.log = open('log.txt', 'w')
 	
 	def __del__(self):
-		self.log.close()
+
 		self.sock.close()
-
-
-	#thread method
-	def run(self):
-		while True:
-			type, outQueue, request = self.taskQueue.get(True)
-
-			if type == Network.REQUEST:
-				self.log.write('%i request polled\n' % (request.token))
-				response = self.__request(request.action, request.data)
-
-				self.log.write('%i response got\n' % (request.token))
-				outQueue.put((request.token, response))
-
-			elif type == Network.TERMINATE:
-				self.log.write('Terminating network\n')
-				break
-
-		self.__del__()
-
-	def terminate(self):
-
-		self.taskQueue.put((Network.TERMINATE, None, None))
 
 
 	#requests
 	def requestLogin(
 		self
-		, outQueue
 		, name
 		, password
 		, game       = None
 		, numTurns   = None
 		, numPlayers = None
 	):
+		action = b'\x01\x00\x00\x00'
+
 		data   = {}
 
 		data['name'] = name
@@ -133,87 +97,88 @@ class Network(Thread):
 		if not numTurns is None:
 			data['num_turns']   = numTurns
 
-		token = self.__getToken()
-		request = Request(token, Action.LOGIN, data)
-		self.taskQueue.put((Network.REQUEST, outQueue, request))
+		data   = json.dumps(data, separators=(',', ':')).encode('ascii')
+		length = len(data).to_bytes(Network.LENGTH_SIZE, 'little')
 
-		return token
+		self.__sendRequest(action + length + data)
 
-	def requestLogout(self, outQueue):
-		token = self.__getToken()
-		request = Request(token, Action.LOGOUT, None)
-		self.taskQueue.put((Network.REQUEST, outQueue, request))
+		return self.__getResponse()
 
-		return token
+	def requestLogout(self):
+		action = b'\x02\x00\x00\x00'
+		data   = b''
+		length = b'\x00\x00\x00\x00'
 
-	def requestMove(self, outQueue, line_idx, speed, train_idx):
+		self.__sendRequest(action + length + data)
+		
+		return self.__getResponse()
+
+	def requestMove(self, line_idx, speed, train_idx):
+		action = b'\x03\x00\x00\x00'
 		data   = {
 			  'line_idx'  : line_idx
 			, 'speed'     : speed
 			, 'train_idx' : train_idx
 		}
+		data   = json.dumps(data, separators=(',', ':')).encode('ascii')
+		length = len(data).to_bytes(Network.LENGTH_SIZE, 'little')
 
-		token   = self.__getToken()
-		request = Request(token, Action.MOVE, data)
-		self.taskQueue.put((Network.REQUEST, outQueue, request))
+		self.__sendRequest(action + length + data)
 
-		return token
+		return self.__getResponse()
 
-	def requestUpgrade(self, outQueue, posts, trains):
+	def requestUpgrade(self, posts, trains):
+		action = b'\x04\x00\x00\x00'
 		data   = {
 			  'posts'  : posts
 			, 'trains' : trains
 		}
+		data   = json.dumps(data, separators=(',', ':')).encode('ascii')
+		length = len(data).to_bytes(Network.LENGTH_SIZE, 'little')
 
-		token   = self.__getToken()
-		request = Request(token, Action.UPGRADE, data)
-		self.taskQueue.put((Network.REQUEST, outQueue, request))
+		self.__sendRequest(action + length + data)
 
-		return token
+		return self.__getResponse()
 
-	def requestTurn(self, outQueue):
-		token   = self.__getToken()
-		request = Request(token, Action.TURN, None)
-		self.taskQueue.put((Network.REQUEST, outQueue, request))
+	def requestTurn(self):
+		action = b'\x05\x00\x00\x00'
+		data   = b''
+		length = b'\x00\x00\x00\x00'
 
-		return token
+		self.__sendRequest(action + length + data)
 
-	def requestPlayer(self, outQueue):
-		token   = self.__getToken()
-		request = Request(token, Action.PLAYER, None)
-		self.taskQueue.put((Network.REQUEST, outQueue, request))
+		return self.__getResponse()
 
-		return token
+	def requestPlayer(self):
+		action = b'\x06\x00\x00\x00'
+		data   = b''
+		length = b'\x00\x00\x00\x00'
 
-	def requestMap(self, outQueue, layer):
-		data   = {'layer' : layer}
+		self.__sendRequest(action + length + data)
 
-		token   = self.__getToken()
-		request = Request(token, Action.MAP, data)
-		self.taskQueue.put((Network.REQUEST, outQueue, request))
+		return self.__getResponse()
 
-		return token
+	def requestMap(self, layer):
+		action = b'\n\x00\x00\x00'
+		data   = json.dumps({'layer' : layer}, separators=(',', ':')).encode('ascii')
+		length = len(data).to_bytes(Network.LENGTH_SIZE, 'little')
+
+		self.__sendRequest(action + length + data)
+
+		return self.__getResponse()
 
 	def requestGames(self):
-		token   = self.__getToken()
-		request = Request(token, Action.GAMES, None)
-		self.taskQueue.put((Network.REQUEST, outQueue, request))
+		action = b'\x07\x00\x00\x00'
+		data   = b''
+		length = b'\x00\x00\x00\x00'
 
-		return token
+		self.__sendRequest(action + length + data)
 
-
-	#private
-	def __getToken(self):
-		token = self.token
-		self.token += 1
-
-		return token
+		return self.__getResponse()
 
 
 	#generalised request
-	def __request(self, action, data):
-		temp = action
-
+	def request(self, action, data):
 		action = action.to_bytes(Network.ACTION_SIZE, 'little')
 
 		if data is None:
@@ -225,7 +190,8 @@ class Network(Thread):
 
 		self.__sendRequest(action + length + data)
 
-		return self.__getResponse(temp)
+		return self.__getResponse()
+
 	
 	#send whole msg(can be socket.sendall() instead)
 	def __sendRequest(self, msg):
@@ -238,7 +204,7 @@ class Network(Thread):
 
 
 	#get whole response(haven't found socket.recvall() yet)
-	def __getResponse(self, action):
+	def __getResponse(self):
 
 		respond = {}
 
@@ -259,7 +225,7 @@ class Network(Thread):
 		
 		respond['msg'] = msg
 
-		return Response(action, respond)
+		return Response(respond)
 
 	def __getWholeMsg(self, msgLen):
 
