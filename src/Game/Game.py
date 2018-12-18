@@ -28,7 +28,7 @@ class Game(QWidget):
 	GAME_TICK  = 5000
 	FRAME_TICK = 17
 
-	POLL_TICK  = 1000
+	POLL_TICK  = 750
 	
 	WHEEL_SENSITIVITY = 1000
 
@@ -36,7 +36,7 @@ class Game(QWidget):
 	def __init__(self, client, playerName, window):
 		self.__initWindow(window)
 
-		self.__initQueues()
+		self.__initAsyncInfo()
 
 		self.__initNetwork(client, playerName)
 
@@ -144,12 +144,14 @@ class Game(QWidget):
 		
 		self.strategy = ItJustWorks(self)
 
-	def __initQueues(self):
+	def __initAsyncInfo(self):
 		self.primary   = Queue()
 		self.secondary = Queue()
 
 		self.primaryExpect   = set()
 		self.secondaryExpect = set()
+
+		self.shouldTurn = False
 
 
 	#logic
@@ -200,8 +202,10 @@ class Game(QWidget):
 			self.update()
 
 		elif event.timerId() == self.pollTickID:
-			#self.__tryPollSecondary()
+			self.__tryPollSecondary()
 			self.__tryPollPrimary()
+			if self.shouldTurn:
+				self._gameTick()
 
 			
 	#inner methods
@@ -240,6 +244,11 @@ class Game(QWidget):
 
 	#called from timer
 	def _gameTick(self):
+		if len(self.primaryExpect) != 0 and len(self.secondaryExpect) != 0:
+			self.shouldTurn = True
+
+		self.shouldTurn = False
+
 		print('$$$ Game tick $$$')
 		token = self.net.requestTurn(self.secondary)
 		print('turn token is ', token)
