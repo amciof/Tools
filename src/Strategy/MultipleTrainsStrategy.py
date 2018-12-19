@@ -80,6 +80,7 @@ class ItJustWorks(Strategy):
 				for idx, train in self.game.trains.items()
 					if train.playerIdx == self.game.player.idx
 		}
+		print("[INFO] Manages: ", len(self.pathWalkers))
 
 	def __initWalkCycles(self):
 		#cache paths to markets

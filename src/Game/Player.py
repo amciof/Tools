@@ -15,7 +15,7 @@ class Player:
 		self.trains  = [
 			train['idx']
 				for train in jsonLogin['trains']
-					if train['idx'] == self.idx
+					if train['player_idx'] == self.idx
 		]
 
 	def getAllIdx(self):

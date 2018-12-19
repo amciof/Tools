@@ -131,10 +131,15 @@ class Game(QWidget):
 			, (self.size().width(), self.size().height())
 		)
 
+		print('[INFO] Trains: ', len(self.trains))
+		print('[INFO] Players: ', self.player.getAllIdx())
+
 		for idx in self.trains:
-			if idx in self.playerName.getAllIdx():
+			if idx in self.player.getAllIdx():
+				print('Your train')
 				color = Scene.TRAIN_YOUR
 			else:
+				print('Opp\'s trains')
 				color = Scene.TRAIN_OPP
 
 			self.scene.setTrainColor(idx, color)
