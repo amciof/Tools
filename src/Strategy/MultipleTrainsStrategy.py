@@ -76,7 +76,9 @@ class ItJustWorks(Strategy):
 
 	def __initPathWalkers(self):
 		self.pathWalkers = {
-			idx : UltraSoldier(self, train) for idx, train in self.game.trains.items()
+			idx : UltraSoldier(self, train)
+				for idx, train in self.game.trains.items()
+					if train.playerIdx == self.game.player.idx
 		}
 
 	def __initWalkCycles(self):

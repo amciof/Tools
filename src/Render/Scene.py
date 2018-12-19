@@ -122,7 +122,11 @@ class Scene:
 		, BaseType.STORAGE : QColor(  0,   0, 255)
 	}
 	ROAD_COLOR  = QColor(  0,   0,   0)
+
 	TRAIN_COLOR = QColor(255,   0, 255)
+	TRAIN_YOUR  = QColor(255, 125, 0)
+	TRAIN_OPP   = QColor(0, 125, 255)
+
 	LABEL_COLOR = QColor(255, 255, 255)
 
 	#special coefs
@@ -327,7 +331,11 @@ class Scene:
 		self.proj[0][0] = 2 * self.zoom / self.w
 		self.proj[1][1] = 2 * self.zoom / self.h
 
-		
+
+	def setTrainColor(self, idx, color):
+
+		self.trainsInfo[idx].color = color
+
 	def updateTrain(self, train):
 		road = train.getRoad()
 		coef = train.getPosition()

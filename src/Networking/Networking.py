@@ -22,7 +22,7 @@ class Result:
 	BAD_COMMAND           = 1
 	RESOURCE_NOT_FOUND    = 2
 	ACCESS_DENIED         = 3
-	NOT_READY             = 4
+	INAPPROPRIATE_GAME_STATE = 4,
 	TIMEOUT               = 5
 	INTERNAL_SERVER_ERROR = 500
 
@@ -78,10 +78,10 @@ class Network(Thread):
 		except RuntimeError as re:
 			print(re.msg)
 
-		self.log = open('log.txt', 'w')
+		#self.log = open('log.txt', 'w')
 	
 	def __del__(self):
-		self.log.close()
+		#self.log.close()
 		self.sock.close()
 
 
@@ -91,14 +91,14 @@ class Network(Thread):
 			type, outQueue, request = self.taskQueue.get(True)
 
 			if type == Network.REQUEST:
-				self.log.write('%i request polled\n' % (request.token))
+				#self.log.write('%i request polled\n' % (request.token))
 				response = self.__request(request.action, request.data)
 
-				self.log.write('%i response got\n' % (request.token))
+				#self.log.write('%i response got\n' % (request.token))
 				outQueue.put((request.token, response))
 
 			elif type == Network.TERMINATE:
-				self.log.write('Terminating network\n')
+				#self.log.write('Terminating network\n')
 				break
 
 		self.__del__()

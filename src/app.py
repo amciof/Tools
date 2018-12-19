@@ -7,7 +7,7 @@ from PyQt5.QtGui  import QIcon, QPainter, QColor, QBrush
 from PyQt5.QtCore import Qt
 
 from GUI.Application import App
-from Networking.Networking import Network
+from Networking.Networking import Network, Result
 from Game.Game import Game
 
 
@@ -109,6 +109,8 @@ class Shell:
 		token = self.client.requestLogin(self.outQueue, nickname, password, game)
 		token, resp = self.outQueue.get(True)
 
+		self.__waitForPlayers()
+
 		app = QApplication(sys.argv)
 		ex  = App(self.client, nickname, 200, 200, 1280, 720)
 		app.exec_()
@@ -138,9 +140,13 @@ class Shell:
 			print('Setting to default value -1: ')
 			num_turns = -1
 
+		print('Enter game name')
+		game = input()
 
-		token = self.client.requestLogin(self.outQueue, nickname, password, None, num_turns, num_players)
+		token = self.client.requestLogin(self.outQueue, nickname, password, game, num_turns, num_players)
 		token, resp = self.outQueue.get(True)
+
+		self.__waitForPlayers()
 
 		app = QApplication(sys.argv)
 		ex  = App(self.client, nickname, 200, 200, 1280, 720)
@@ -150,6 +156,20 @@ class Shell:
 		token, resp = self.outQueue.get(True)
 
 		return True
+
+	def __waitForPlayers(self):
+		print('Waiting for other players...')
+		while True:
+			token = self.client.requestTurn(self.outQueue)
+			token, resp = self.outQueue.get(True)
+
+			if resp.result == Result.OKEY:
+				print()
+				print('Starting game')
+				break;
+
+			elif resp.result == Result.INAPPROPRIATE_GAME_STATE:
+				print('Fail')
 
 	
 	def __games(self):

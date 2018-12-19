@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import QApplication, QWidget, QMainWindow, QLabel
 from PyQt5.QtGui     import QIcon, QPainter, QColor, QBrush
 from PyQt5.QtCore    import Qt
 
-from Networking.Networking import Network, Options, Action
+from Networking.Networking import Network, Options, Action, Result
 
 from Render.Scene import Scene
 
@@ -25,10 +25,10 @@ class Game(QWidget):
 	BUTTON_RIGHT = 2
 
 	# Game Consts
-	GAME_TICK  = 3500
+	GAME_TICK  = 6000
 	FRAME_TICK = 18
 
-	POLL_TICK  = 750
+	POLL_TICK  = 500
 	
 	WHEEL_SENSITIVITY = 1000
 
@@ -57,11 +57,11 @@ class Game(QWidget):
 
 		self.__initAdjacencyRel(mapResp0.msg)
 
-		self.__initTrains(playerResp.msg)
+		self.__initTrains(mapResp1.msg)
 
-		self.__initScene()
-		
 		self.__initPlayer(playerResp.msg)
+		
+		self.__initScene()
 
 		self.__initStateParams()
 
@@ -114,10 +114,10 @@ class Game(QWidget):
 			self.adjacencyRel[u][v] = road
 			self.adjacencyRel[v][u] = road
 
-	def __initTrains(self, jsonLogin):
+	def __initTrains(self, jsonMap1):
 		self.trains = {}
 
-		for jsonTrain in jsonLogin['trains']:
+		for jsonTrain in jsonMap1['trains']:
 			idx     = jsonTrain['idx']
 			roadIdx = jsonTrain['line_idx']
 
@@ -130,6 +130,15 @@ class Game(QWidget):
 			, self.trains
 			, (self.size().width(), self.size().height())
 		)
+
+		for idx in self.trains:
+			if idx in self.playerName.getAllIdx():
+				color = Scene.TRAIN_YOUR
+			else:
+				color = Scene.TRAIN_OPP
+
+			self.scene.setTrainColor(idx, color)
+			
 
 	def __initPlayer(self, jsonPlayer):
 
@@ -159,6 +168,7 @@ class Game(QWidget):
 		self.gameTickID  = self.startTimer(Game.GAME_TICK)
 		self.frameTickID = self.startTimer(Game.FRAME_TICK)
 		self.pollTickID  = self.startTimer(Game.POLL_TICK)
+
 		self._turn()
 
 
@@ -296,13 +306,6 @@ class Game(QWidget):
 			idx = jsonTrain['idx']
 
 			train = self.trains[idx]
-
-			# print('---Before---')
-			# train.printStats()
-
 			train.update(jsonTrain, {'road' : road})
-
-			# print('---After---')
-			# train.printStats()
 
 			self.scene.updateTrain(train)

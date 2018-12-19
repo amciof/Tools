@@ -12,7 +12,11 @@ class Player:
 		self.inGame  = jsonLogin['in_game']
 		self.name    = jsonLogin['name']
 		self.rating  = jsonLogin['rating']
-		self.trains  = [train['idx'] for train in jsonLogin['trains']]
+		self.trains  = [
+			train['idx']
+				for train in jsonLogin['trains']
+					if train['idx'] == self.idx
+		]
 
 	def getAllIdx(self):
 
